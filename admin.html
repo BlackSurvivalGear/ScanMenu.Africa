@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - ScanMenu.Africa</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body class="bg-light">
+    <header>
+        <nav class="container">
+            <a href="index.html" class="logo">
+                <img src="favi.png" alt="ScanMenu.Africa" class="logo-icon">
+                <span>ScanMenu.Africa Admin</span>
+            </a>
+            <div class="nav-links">
+                <a href="melanin-map.html" class="btn btn-outline">Melanin Map</a>
+                <a href="dashboard.html" class="btn btn-outline">My Dashboard</a>
+                <button id="logout-btn" class="btn btn-outline btn-small">Logout</button>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container dashboard-watermark">
+        <div class="dashboard-content" style="max-width: 100%;">
+            <section class="welcome-card">
+                <h2>Administrative Dashboard</h2>
+                <p>Manage users and restaurants across the ScanMenu.Africa platform.</p>
+            </section>
+
+            <div class="admin-grid">
+                <div class="stat-card">
+                    <span id="total-users" class="stat-value">...</span>
+                    <span class="stat-label">Total Users</span>
+                </div>
+                <div class="stat-card">
+                    <span id="total-restaurants" class="stat-value">...</span>
+                    <span class="stat-label">Total Restaurants</span>
+                </div>
+                <div class="stat-card">
+                    <span id="total-menu-items" class="stat-value">...</span>
+                    <span class="stat-label">Total Menu Items</span>
+                </div>
+                <div class="stat-card">
+                    <span id="total-public-menus" class="stat-value">...</span>
+                    <span class="stat-label">Public Menus</span>
+                </div>
+            </div>
+
+            <div class="tab-buttons">
+                <button class="tab-btn active" data-tab="users-panel">Users</button>
+                <button class="tab-btn" data-tab="restaurants-panel">Restaurants</button>
+                <button class="tab-btn" data-tab="diagnostic-panel">Map Diagnostics</button>
+            </div>
+
+            <!-- Users Panel -->
+            <section id="users-panel" class="admin-section tab-content">
+                <div class="section-header">
+                    <h3>Users Management</h3>
+                    <div class="search-box">
+                        <input type="text" id="user-search" placeholder="Search by name, email or UID...">
+                    </div>
+                    <button id="export-users-btn" class="btn btn-outline btn-small">Export CSV</button>
+                </div>
+                <div class="table-container">
+                    <table id="users-table">
+                        <thead>
+                            <tr>
+                                <th>Restaurant Name</th>
+                                <th>Owner Name</th>
+                                <th data-sort="email">Email</th>
+                                <th data-sort="uid">Firebase UID</th>
+                                <th data-sort="plan">Plan</th>
+                                <th data-sort="createdAt">Registration Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="users-table-body">
+                            <!-- Users will be injected here -->
+                            <tr><td colspan="6" style="text-align: center;">Loading users...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="pagination">
+                    <button id="prev-users-btn" class="btn btn-outline btn-small">Previous</button>
+                    <span id="users-page-info">Page 1</span>
+                    <button id="next-users-btn" class="btn btn-outline btn-small">Next</button>
+                </div>
+            </section>
+
+            <!-- Map Diagnostics Panel -->
+            <section id="diagnostic-panel" class="admin-section tab-content hidden">
+                <div class="section-header">
+                    <h3>Map Diagnostics</h3>
+                    <p class="text-muted">Monitor geocoding status and repair business locations.</p>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Business Name</th>
+                                <th>Approved</th>
+                                <th>Latitude</th>
+                                <th>Longitude</th>
+                                <th>Map Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="diagnostic-table-body">
+                            <!-- Diagnostic rows will be injected here -->
+                            <tr><td colspan="6" style="text-align: center;">Loading diagnostics...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Restaurants Panel -->
+            <section id="restaurants-panel" class="admin-section tab-content hidden">
+                <div class="section-header">
+                    <h3>Restaurants Management</h3>
+                    <div class="search-box">
+                        <input type="text" id="restaurant-search" placeholder="Search by business name or owner...">
+                    </div>
+                    <button id="export-restaurants-btn" class="btn btn-outline btn-small">Export CSV</button>
+                </div>
+                <div class="table-container">
+                    <table id="restaurants-table">
+                        <thead>
+                            <tr>
+                                <th data-sort="businessName">Business Name</th>
+                                <th data-sort="ownerName">Owner Name</th>
+                                <th data-sort="plan">Plan</th>
+                                <th data-sort="category">Category</th>
+                                <th>Verification</th>
+                                <th data-sort="menuCount">Items</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="restaurants-table-body">
+                            <!-- Restaurants will be injected here -->
+                            <tr><td colspan="6" style="text-align: center;">Loading restaurants...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="pagination">
+                    <button id="prev-restaurants-btn" class="btn btn-outline btn-small">Previous</button>
+                    <span id="restaurants-page-info">Page 1</span>
+                    <button id="next-restaurants-btn" class="btn btn-outline btn-small">Next</button>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Delete User Confirmation Modal -->
+    <div id="delete-user-modal" class="modal hidden">
+        <div class="modal-content" style="max-width: 500px; border-top: 5px solid var(--error-color);">
+            <div class="modal-header">
+                <h3 style="color: var(--error-color);">WARNING: Permanent Deletion</h3>
+                <span class="close-modal" id="close-delete-modal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <p>You are about to permanently delete this user.</p>
+
+                <div style="background: #fff5f5; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; border: 1px solid #feb2b2;">
+                    <div class="detail-item" style="border: none; padding: 0.25rem 0;">
+                        <span class="label">User:</span>
+                        <span id="delete-modal-user-email" class="value" style="font-weight: 600;"></span>
+                    </div>
+                    <div class="detail-item" style="border: none; padding: 0.25rem 0;">
+                        <span class="label">Restaurant:</span>
+                        <span id="delete-modal-biz-name" class="value" style="font-weight: 600;"></span>
+                    </div>
+                </div>
+
+                <p style="font-weight: 600; color: var(--text-color);">This action cannot be undone. The following data will be removed:</p>
+                <ul style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: 1.5rem; padding-left: 1.25rem;">
+                    <li>User account</li>
+                    <li>Restaurant profile</li>
+                    <li>Menu items</li>
+                    <li>Menu categories</li>
+                    <li>QR data references</li>
+                    <li>Subscription information</li>
+                </ul>
+
+                <p style="margin-bottom: 0.75rem; font-size: 0.875rem;">Type <strong>DELETE</strong> to continue.</p>
+                <input type="text" id="delete-confirm-input" class="form-control" placeholder="DELETE" style="text-transform: uppercase;">
+            </div>
+            <div class="form-actions" style="margin-top: 1rem;">
+                <button id="cancel-delete-btn" class="btn btn-outline">Cancel</button>
+                <button id="permanently-delete-btn" class="btn btn-error" disabled style="background-color: var(--error-color); color: white;">Permanently Delete User</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Subscription Confirmation Modal -->
+    <div id="subscription-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Confirm Subscription Change</h3>
+                <span class="close-modal" id="close-subscription-modal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to change this user's subscription?</p>
+                <div class="detail-item">
+                    <span class="label">User:</span>
+                    <span id="modal-user-email" class="value"></span>
+                </div>
+                <div class="detail-item">
+                    <span class="label">Current Plan:</span>
+                    <span id="modal-current-plan" class="value"></span>
+                </div>
+                <div class="detail-item" style="border-bottom: none;">
+                    <span class="label">New Plan:</span>
+                    <span id="modal-new-plan" class="value" style="font-weight: 700; color: var(--primary-color);"></span>
+                </div>
+                <p style="margin-top: 1.5rem; font-size: 0.875rem; color: var(--text-muted);">
+                    This will take effect immediately. Audit information will be recorded.
+                </p>
+            </div>
+            <div class="form-actions">
+                <button id="cancel-subscription-btn" class="btn btn-outline">Cancel</button>
+                <button id="confirm-subscription-btn" class="btn btn-primary">Confirm Update</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="js/admin.js"></script>
+</body>
+</html>

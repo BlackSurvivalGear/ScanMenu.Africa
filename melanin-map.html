@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Melanin Map™ - African Business Discovery Network</title>
+    <link rel="stylesheet" href="css/style.css">
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        #map {
+            height: 600px;
+            width: 100%;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            z-index: 1;
+        }
+        .map-container {
+            margin-top: 2rem;
+            position: relative;
+        }
+        .filter-bar {
+            background: white;
+            padding: 1.5rem;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            margin-bottom: 1.5rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            align-items: flex-end;
+        }
+        .map-popup .leaflet-popup-content-wrapper {
+            border-radius: var(--radius-sm);
+            padding: 0;
+            overflow: hidden;
+        }
+        .map-popup .leaflet-popup-content {
+            margin: 0;
+            width: 250px !important;
+        }
+        .popup-info {
+            padding: 1rem;
+        }
+        .popup-logo {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+            background: var(--bg-light);
+        }
+        .popup-title {
+            font-weight: 800;
+            font-size: 1.1rem;
+            margin-bottom: 0.25rem;
+            color: var(--primary-color);
+        }
+        .popup-meta {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 0.75rem;
+        }
+        .popup-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+        }
+        .near-me-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 1000;
+            background: white;
+            border: 2px solid rgba(0,0,0,0.2);
+            border-radius: 4px;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .near-me-btn:hover {
+            background: #f4f4f4;
+        }
+        .map-legend {
+            background: white;
+            padding: 1rem;
+            border-radius: var(--radius-sm);
+            box-shadow: var(--shadow);
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            z-index: 1000;
+            font-size: 0.85rem;
+            border: 1px solid var(--border-color);
+        }
+        .legend-title {
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            color: var(--text-color);
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.25rem;
+        }
+        .legend-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        .dot-verified { background-color: #2aad27; }
+        .dot-pending { background-color: #f69730; }
+        .dot-attention { background-color: #cb2b3e; }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .status-verified .status-dot { background-color: #2aad27; }
+        .status-pending .status-dot { background-color: #f69730; }
+        .status-error .status-dot { background-color: #cb2b3e; }
+        .status-verified { color: #2aad27; }
+        .status-pending { color: #f69730; }
+        .status-error { color: #cb2b3e; }
+
+        @media (max-width: 768px) {
+            #map {
+                height: 400px;
+            }
+            .map-legend {
+                position: static;
+                margin-top: 1rem;
+                display: flex;
+                flex-wrap: wrap;
+                gap: 1rem;
+            }
+            .legend-title {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <header>
+        <nav class="container">
+            <a href="index.html" class="logo">
+                <img src="favi.png" alt="ScanMenu.Africa" class="logo-icon">
+                <span>ScanMenu.Africa</span>
+            </a>
+            <div class="nav-links">
+                <a href="melanin-map.html" class="btn btn-primary btn-small">Melanin Map</a>
+                <a href="login.html" class="btn btn-outline btn-small">Sign In</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container" style="padding-top: 3rem; padding-bottom: 4rem;">
+        <div style="text-align: center; margin-bottom: 3rem;">
+            <h1 style="font-size: 3.5rem; margin-bottom: 0.5rem;">Melanin Map™</h1>
+            <p style="font-size: 1.25rem; color: var(--text-muted); max-width: 700px; margin: 0 auto;">
+                Discover African Restaurants, Cafés and Businesses across the continent and beyond.
+            </p>
+        </div>
+
+        <section class="filter-bar">
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="search-input">Search</label>
+                <input type="text" id="search-input" placeholder="Business name...">
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="country-filter">Country</label>
+                <select id="country-filter">
+                    <option value="">All Countries</option>
+                </select>
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="city-filter">City</label>
+                <input type="text" id="city-filter" placeholder="City name...">
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="category-filter">Category</label>
+                <select id="category-filter">
+                    <option value="">All Categories</option>
+                    <option value="Restaurant">Restaurant</option>
+                    <option value="Cafe">Cafe</option>
+                    <option value="Bakery">Bakery</option>
+                    <option value="Bar">Bar</option>
+                    <option value="Hotel">Hotel</option>
+                    <option value="Food Truck">Food Truck</option>
+                    <option value="Food Vendor">Food Vendor</option>
+                    <option value="Catering">Catering</option>
+                    <option value="Takeaway">Takeaway</option>
+                </select>
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="cuisine-filter">Cuisine</label>
+                <input type="text" id="cuisine-filter" placeholder="e.g. Nigerian">
+            </div>
+            <button id="apply-filters" class="btn btn-primary" style="height: 42px;">Filter</button>
+        </section>
+
+        <section class="map-container">
+            <button id="near-me-btn" class="near-me-btn">📍 Near Me</button>
+            <div id="map"></div>
+            <div class="map-legend">
+                <div class="legend-title">Melanin Map™ Legend</div>
+                <div class="legend-item">
+                    <span class="legend-dot dot-verified"></span>
+                    <span>Verified Businesses</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-dot dot-pending"></span>
+                    <span>Pending Verification</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-dot dot-attention"></span>
+                    <span>Needs Attention</span>
+                </div>
+            </div>
+        </section>
+
+        <section style="margin-top: 4rem; text-align: center;">
+            <h2>Are you a business owner?</h2>
+            <p>Get your business on the Melanin Map™ and be discovered by thousands of customers.</p>
+            <div style="margin-top: 1.5rem;">
+                <a href="login.html?mode=register" class="btn btn-primary btn-large">Add Your Business</a>
+            </div>
+        </section>
+    </main>
+
+    <footer class="public-footer" style="margin-top: 0;">
+        <div class="container">
+            <p>&copy; 2026 Melanin Map™ by ScanMenu.Africa. All rights reserved.</p>
+            <p style="margin-top: 0.5rem; font-size: 0.8rem;">Discover the excellence of African entrepreneurship.</p>
+        </div>
+    </footer>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script type="module" src="js/map.js"></script>
+</body>
+</html>

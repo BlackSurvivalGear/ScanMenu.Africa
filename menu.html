@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menu | ScanMenu.Africa</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="bg-light">
+    <div id="loading-screen" class="loading-container">
+        <div class="loader" style="border-top-color: var(--primary-color); width: 3rem; height: 3rem;"></div>
+        <p style="margin-top: 1rem;">Loading Menu...</p>
+    </div>
+
+    <div id="menu-layout" class="menu-layout-wrapper hidden">
+        <div id="menu-container" class="public-menu">
+            <header class="restaurant-header">
+                <h1 id="res-name" class="restaurant-name"></h1>
+                <p id="res-address" class="restaurant-info"></p>
+                <a id="res-whatsapp" href="#" class="whatsapp-link hidden">
+                    <span>Message on WhatsApp</span>
+                </a>
+            </header>
+
+            <main id="menu-content">
+                <!-- Menu items will be injected here -->
+            </main>
+
+            <footer class="public-footer">
+                <p>Powered by <a href="index.html" style="color: inherit; font-weight: 600;">ScanMenu.Africa</a></p>
+                <p style="margin-top: 0.5rem;"><a href="melanin-map.html" style="color: var(--primary-color); text-decoration: none; font-weight: 600;">Discover more on Melanin Map™</a></p>
+            </footer>
+        </div>
+
+        <!-- Cart Panel (Sticky on Desktop, Drawer on Mobile) -->
+        <div id="cart-panel" class="cart-panel hidden"></div>
+    </div>
+
+    <!-- Fixed Bottom Summary for Mobile -->
+    <div id="mobile-cart-summary" class="cart-summary-fixed hidden"></div>
+
+    <!-- Order Submission Modal -->
+    <div id="order-modal" class="modal hidden">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h3>Submit Order</h3>
+                <span class="close-modal" onclick="toggleOrderModal(false)">&times;</span>
+            </div>
+            <p style="margin-bottom: 1.5rem; font-size: 0.9rem;">Please enter your details to send your order to the restaurant.</p>
+            <form id="order-form">
+                <div class="form-group">
+                    <label for="customer-name">Name *</label>
+                    <input type="text" id="customer-name" required placeholder="Your Name">
+                </div>
+                <div class="form-group">
+                    <label for="customer-phone">Phone Number *</label>
+                    <input type="tel" id="customer-phone" required placeholder="e.g. +447842110899">
+                </div>
+                <div class="form-actions" style="margin-top: 2rem;">
+                    <button type="button" class="btn btn-outline" style="flex: 1;" onclick="toggleOrderModal(false)">Cancel</button>
+                    <button type="submit" class="btn btn-primary" style="flex: 1;">Submit Order</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Success Message Modal -->
+    <div id="success-modal" class="modal hidden">
+        <div class="modal-content" style="max-width: 400px; text-align: center;">
+            <div style="font-size: 3rem; color: var(--success-color); margin-bottom: 1rem;">✓</div>
+            <h3 style="margin-bottom: 0.5rem;">Order Sent!</h3>
+            <p style="margin-bottom: 2rem;">Your order has been sent to the restaurant.</p>
+            <button class="btn btn-primary btn-full" onclick="toggleSuccessModal(false)">Close</button>
+        </div>
+    </div>
+
+    <!-- Overlay for Drawer -->
+    <div id="drawer-overlay" class="drawer-overlay"></div>
+
+    <div id="error-screen" class="empty-state hidden">
+        <h2 id="error-title">Unavailable</h2>
+        <p id="error-message">This menu is currently unavailable.</p>
+        <div style="margin-top: 2rem;">
+            <a href="index.html" class="btn btn-outline">Back to Home</a>
+        </div>
+    </div>
+
+    <script type="module" src="js/public-menu.js"></script>
+</body>
+</html>

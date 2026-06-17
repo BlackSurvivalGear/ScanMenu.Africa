@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - ScanMenu.Africa</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body class="bg-light">
+    <header>
+        <nav class="container">
+            <a href="index.html" class="logo">
+                <img src="favi.png" alt="ScanMenu.Africa" class="logo-icon">
+                <span>ScanMenu.Africa</span>
+                <span id="plan-badge" class="badge" style="display: none;">Preview</span>
+            </a>
+            <div class="nav-links">
+                <a href="melanin-map.html" class="btn btn-outline btn-small">Melanin Map</a>
+                <a href="#orders-section" id="nav-orders-link" class="btn btn-outline btn-small">
+                    Orders <span id="new-orders-badge" class="badge badge-error hidden" style="margin-left: 0.5rem; padding: 0.15rem 0.5rem; background-color: var(--error-color); color: white;">0</span>
+                </a>
+                <a href="pricing.html" class="btn btn-outline btn-small">Plans & Pricing</a>
+                <button id="logout-btn" class="btn btn-outline btn-small">Logout</button>
+            </div>
+        </nav>
+    </header>
+
+    <div id="menu-item-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-title">Add Menu Item</h3>
+                <span class="close-modal">&times;</span>
+            </div>
+            <form id="menu-item-form">
+                <input type="hidden" id="item-id">
+                <div class="form-group">
+                    <label for="item-name">Item Name *</label>
+                    <input type="text" id="item-name" required placeholder="e.g. Jollof Rice">
+                </div>
+                <div class="form-group">
+                    <label for="item-description">Description</label>
+                    <textarea id="item-description" rows="3" placeholder="Optional description..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="item-price">Price (<span id="price-currency-symbol">£</span>) *</label>
+                    <input type="number" id="item-price" step="0.01" required placeholder="0.00">
+                </div>
+                <div class="form-group">
+                    <label for="item-category">Category</label>
+                    <select id="item-category">
+                        <option value="Main Courses">Main Courses</option>
+                        <option value="Starters">Starters</option>
+                        <option value="Drinks">Drinks</option>
+                        <option value="Desserts">Desserts</option>
+                        <option value="Sides">Sides</option>
+                        <option value="Specials">Specials</option>
+                        <option value="custom">Custom Category</option>
+                    </select>
+                </div>
+                <div id="custom-category-group" class="form-group hidden">
+                    <label for="custom-category">Custom Category Name</label>
+                    <input type="text" id="custom-category" placeholder="Enter custom category">
+                </div>
+                <div class="checkbox-group">
+                    <label>
+                        <input type="checkbox" id="item-available" checked> Available
+                    </label>
+                </div>
+                <div class="checkbox-group">
+                    <label>
+                        <input type="checkbox" id="item-featured"> Featured Item
+                    </label>
+                </div>
+                <div class="form-actions" style="margin-top: 1.5rem; display: flex; gap: 0.75rem;">
+                    <button type="button" id="cancel-item-btn" class="btn btn-outline" style="flex: 1;">Cancel</button>
+                    <button type="submit" class="btn btn-primary" style="flex: 1;">Save Item</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <main class="dashboard-watermark">
+        <div class="container dashboard-content">
+
+            <section class="welcome-card">
+                <h2>Welcome, <span id="user-display-email">User</span>!</h2>
+                <p>You are successfully logged in to your ScanMenu.Africa dashboard. Manage your restaurant profile, menu, and QR codes below.</p>
+            </section>
+
+            <section id="plan-usage-section" class="account-details hidden" style="margin-bottom: 1.5rem;"></section>
+
+            <!-- Verification Status Section -->
+            <section id="verification-status-section" class="account-details hidden" style="margin-bottom: 1.5rem;">
+                <h3 style="margin-bottom: 1rem;">Verification Status</h3>
+                <div id="status-card-container">
+                    <div class="stat-card-compact">
+                        <div class="stat-label-compact">Status</div>
+                        <div id="business-status-value" class="stat-value-compact">Loading...</div>
+                        <p id="business-status-desc" style="font-size: 0.85rem; margin-top: 0.5rem; margin-bottom: 0;"></p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Orders Section -->
+            <section id="orders-section" class="account-details" style="margin-bottom: 1.5rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                    <h3 style="margin-bottom: 0;">Order Inbox</h3>
+                    <div class="filter-group" style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                        <button class="btn btn-outline btn-small order-filter-btn active" data-filter="new">New</button>
+                        <button class="btn btn-outline btn-small order-filter-btn" data-filter="accepted">Accepted</button>
+                        <button class="btn btn-outline btn-small order-filter-btn" data-filter="completed">Completed</button>
+                        <button class="btn btn-outline btn-small order-filter-btn" data-filter="cancelled">Cancelled</button>
+                    </div>
+                </div>
+                <div id="orders-list" class="orders-grid">
+                    <!-- Orders will be injected here -->
+                    <p class="text-muted">Loading orders...</p>
+                </div>
+            </section>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
+                <!-- Restaurant Profile -->
+                <section id="restaurant-details" class="account-details">
+                    <h3 style="display: flex; align-items: center; gap: 0.5rem;">
+                        <span>Restaurant Profile</span>
+                    </h3>
+                    <div class="detail-item" style="margin-bottom: 0.75rem; border-bottom: 1px solid var(--bg-light); padding-bottom: 0.5rem;">
+                        <span class="label" style="font-size: 0.8rem; color: var(--text-muted); display: block;">Business Name</span>
+                        <span id="biz-name" class="value" style="font-weight: 600;">Loading...</span>
+                    </div>
+                    <div class="detail-item" style="margin-bottom: 0.75rem; border-bottom: 1px solid var(--bg-light); padding-bottom: 0.5rem;">
+                        <span class="label" style="font-size: 0.8rem; color: var(--text-muted); display: block;">Owner Name</span>
+                        <span id="owner-name" class="value">Loading...</span>
+                    </div>
+                    <div class="detail-item" style="margin-bottom: 0.75rem; border-bottom: 1px solid var(--bg-light); padding-bottom: 0.5rem;">
+                        <span class="label" style="font-size: 0.8rem; color: var(--text-muted); display: block;">Phone</span>
+                        <span id="biz-phone" class="value">Loading...</span>
+                    </div>
+                    <div class="detail-item" style="margin-bottom: 0.75rem; border-bottom: 1px solid var(--bg-light); padding-bottom: 0.5rem;">
+                        <span class="label" style="font-size: 0.8rem; color: var(--text-muted); display: block;">WhatsApp</span>
+                        <span id="biz-whatsapp" class="value">Loading...</span>
+                    </div>
+                    <div class="detail-item" style="margin-bottom: 0.75rem; border-bottom: 1px solid var(--bg-light); padding-bottom: 0.5rem;">
+                        <span class="label" style="font-size: 0.8rem; color: var(--text-muted); display: block;">Address</span>
+                        <span id="biz-address" class="value">Loading...</span>
+                    </div>
+                    <div class="detail-item" style="margin-bottom: 1.5rem;">
+                        <span class="label" style="font-size: 0.8rem; color: var(--text-muted); display: block;">Menu Currency</span>
+                        <span id="biz-currency" class="value">Loading...</span>
+                    </div>
+                    <div id="geocode-error" class="error-box hidden" style="margin-bottom: 1rem;"></div>
+                    <div id="geocode-success" class="error-box hidden" style="background-color: #dcfce7; color: #166534; border-color: #bbf7d0; margin-bottom: 1rem;"></div>
+
+                    <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                        <button id="geocode-business-btn" class="btn btn-primary btn-full">📍 Update Map Location</button>
+                        <button id="edit-profile-btn" class="btn btn-outline btn-full">Edit Profile</button>
+                    </div>
+                </section>
+
+                <!-- QR Code Section -->
+                <section id="qr-code-section" class="account-details">
+                    <h3>QR Code</h3>
+                    <p class="text-muted" style="font-size: 0.9rem; margin-bottom: 1rem;">Instant access for your customers.</p>
+
+                    <div class="qr-container" style="display: flex; flex-direction: column; align-items: center; gap: 1rem;">
+                        <div id="qr-preview-container" class="qr-preview-box" style="background: var(--bg-light); padding: 1rem; border-radius: var(--radius-sm); border: 1px dashed var(--border-color); width: 100%; display: flex; align-items: center; justify-content: center; min-height: 200px;">
+                            <div class="qr-placeholder">
+                                <p>No QR Generated</p>
+                            </div>
+                        </div>
+
+                        <div class="qr-actions" style="width: 100%;">
+                            <button id="generate-qr-btn" class="btn btn-primary btn-full">Generate QR Code</button>
+                            <div id="qr-download-actions" class="hidden" style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+                                <button id="open-menu-btn" class="btn btn-outline btn-small" style="flex: 1;">Open Menu</button>
+                                <button id="download-qr-btn" class="btn btn-outline btn-small" style="flex: 1;">Download QR</button>
+                                <button id="copy-link-btn" class="btn btn-outline btn-small" style="flex: 1;">Copy Link</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="qr-message" class="error-box hidden" style="background-color: #dcfce7; color: #166534; border-color: #bbf7d0;"></div>
+                    <div id="qr-error" class="error-box hidden"></div>
+                </section>
+            </div>
+
+            <!-- Menu Builder -->
+            <section id="menu-builder-section" class="account-details" style="margin-top: 1.5rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                    <h3 style="margin-bottom: 0;">Menu Builder</h3>
+                    <button id="add-menu-item-btn" class="btn btn-primary btn-small">+ Add Menu Item</button>
+                </div>
+                <div id="menu-items-list" class="menu-items-grid">
+                    <!-- Menu items will be injected here -->
+                    <p class="text-muted">No menu items added yet. Click the button above to create your first item!</p>
+                </div>
+                <div id="menu-error" class="error-box hidden"></div>
+            </section>
+
+            <!-- Account Settings -->
+            <section class="account-details" style="margin-top: 1.5rem;">
+                <h3>Account Information</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem;">
+                    <div class="detail-item">
+                        <span class="label" style="font-size: 0.8rem; color: var(--text-muted); display: block;">Email Address</span>
+                        <span id="user-email" class="value">Loading...</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="label" style="font-size: 0.8rem; color: var(--text-muted); display: block;">Registration Date</span>
+                        <span id="user-created-at" class="value">Loading...</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="label" style="font-size: 0.8rem; color: var(--text-muted); display: block;">User ID</span>
+                        <span id="user-uid" class="value" style="font-size: 0.75rem; color: var(--text-muted);">Loading...</span>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <div id="upgrade-modal" class="modal hidden">
+        <div class="modal-content" style="max-width: 480px;">
+            <div class="modal-header">
+                <h3 style="color: var(--primary-color);" id="upgrade-modal-title">Upgrade Your Plan</h3>
+                <span class="close-modal" id="close-upgrade-modal">&times;</span>
+            </div>
+            <div class="upgrade-message">
+                <p id="upgrade-modal-description">Upgrade to unlock more features and grow your restaurant.</p>
+
+                <div id="upgrade-options" style="display: flex; flex-direction: column; gap: 1rem; margin: 1.5rem 0;">
+                    <button id="upgrade-standard-btn" class="btn btn-primary btn-full hidden">Upgrade to Standard ($9.99/year)</button>
+                    <button id="upgrade-pro-btn" class="btn btn-secondary btn-full hidden">Upgrade to Pro ($49.99/year)</button>
+                </div>
+
+                <div style="margin-top: 1rem; padding: 1rem; background: var(--bg-light); border-radius: var(--radius-sm); font-size: 0.85rem; color: var(--text-muted);">
+                    <p style="margin-bottom: 0.5rem; font-weight: 600; color: var(--text-color);">Redirection Info:</p>
+                    <p>You will be redirected to PayPal to complete your annual subscription purchase.</p>
+                    <p style="margin-top: 0.5rem; border-top: 1px solid var(--border-color); padding-top: 0.5rem;">
+                        Once payment has been completed, your ScanMenu.Africa subscription will be activated. If activation does not occur automatically, please contact support with your PayPal transaction reference.
+                    </p>
+                </div>
+
+                <div style="margin-top: 1.5rem; display: flex; flex-direction: column; gap: 0.5rem; align-items: center;">
+                    <button id="cancel-upgrade-btn" class="btn btn-outline btn-full">Cancel</button>
+                    <a href="pricing.html" class="btn btn-link btn-small">View All Plans & Pricing</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="js/dashboard.js"></script>
+</body>
+</html>

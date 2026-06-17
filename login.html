@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login / Register - ScanMenu.Africa</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="bg-light">
+    <header>
+        <nav class="container">
+            <a href="index.html" class="logo">
+                <img src="favi.png" alt="ScanMenu.Africa" class="logo-icon">
+                <span>ScanMenu.Africa</span>
+            </a>
+            <div class="nav-links">
+                <a href="melanin-map.html" class="btn btn-outline btn-small">Melanin Map</a>
+            </div>
+        </nav>
+    </header>
+
+    <div class="auth-container">
+        <div class="auth-card">
+            <h2 id="auth-title">Sign In</h2>
+            <p id="auth-subtitle">Welcome back! Please enter your details.</p>
+
+            <form id="auth-form">
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" required placeholder="example@domain.com">
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" required placeholder="••••••••">
+                    <small id="password-hint" class="hidden">Password must be at least 6 characters long.</small>
+                </div>
+                <button type="submit" id="auth-submit-btn" class="btn btn-primary btn-full">
+                    <span id="btn-text">Sign In</span>
+                    <div id="btn-loader" class="loader hidden"></div>
+                </button>
+            </form>
+
+            <div id="error-message" class="error-box hidden"></div>
+
+            <div class="auth-switch">
+                <p id="switch-text">Don't have an account? <a href="#" id="toggle-auth">Create Account</a></p>
+            </div>
+
+            <div class="back-home">
+                <a href="index.html">← Back to Home</a>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="js/auth.js"></script>
+</body>
+</html>
