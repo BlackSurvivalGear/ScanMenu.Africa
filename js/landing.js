@@ -6,8 +6,35 @@ import qrcode from "./qrcode.js";
  */
 
 document.addEventListener("DOMContentLoaded", () => {
+    enhanceHeroVideo();
     generateDemoQR();
 });
+
+/**
+ * Makes the animated hero artwork clearer while preserving the full composition on mobile.
+ */
+function enhanceHeroVideo() {
+    const videoContainer = document.querySelector(".hero-video-container");
+    const video = videoContainer?.querySelector("video");
+    if (!videoContainer || !video) return;
+
+    videoContainer.style.opacity = "0.25";
+
+    const applyFraming = () => {
+        if (window.matchMedia("(max-width: 640px)").matches) {
+            video.style.objectFit = "contain";
+            video.style.objectPosition = "center center";
+            video.style.transform = "scale(0.92)";
+        } else {
+            video.style.objectFit = "cover";
+            video.style.objectPosition = "center center";
+            video.style.transform = "none";
+        }
+    };
+
+    applyFraming();
+    window.addEventListener("resize", applyFraming, { passive: true });
+}
 
 /**
  * Generates a QR code for the demonstration menu
