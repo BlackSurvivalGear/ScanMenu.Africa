@@ -1,0 +1,1 @@
+These files define the QR customization acceptance and manual verification requirements for the feature branch.
