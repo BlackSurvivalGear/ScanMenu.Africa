@@ -1,18 +1,8 @@
 import { auth, db } from "./auth.js";
 import {
-    collection,
-    doc,
-    addDoc,
-    updateDoc,
-    deleteDoc,
-    query,
-    where,
-    getDocs,
-    serverTimestamp,
-    orderBy
+    collection, doc, addDoc, updateDoc, deleteDoc, query, where, getDocs, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
 
-// DOM Elements
 const menuItemsList = document.getElementById("menu-items-list");
 const menuError = document.getElementById("menu-error");
 const addMenuItemBtn = document.getElementById("add-menu-item-btn");
@@ -32,542 +22,319 @@ let currentCurrencySymbol = "£";
 let previousCategory = "";
 let listenersAttached = false;
 
-/**
- * Attaches event listeners once
- */
+const PREVIEW_LIMITS = { "Main Courses": 3, "Sides": 2, "Drinks": 2 };
+const STANDARD_ITEM_LIMIT = 25;
+const STANDARD_CATEGORIES = ["Main Courses", "Starters", "Drinks", "Desserts", "Sides", "Specials"];
+
+function displayPlan(plan) {
+    return plan === "pro" ? "Premium" : plan.charAt(0).toUpperCase() + plan.slice(1);
+}
+
 function attachEventListeners() {
     if (listenersAttached) return;
-
-    if (addMenuItemBtn) {
-        addMenuItemBtn.addEventListener("click", () => openModal());
-    }
-
-    if (cancelItemBtn) {
-        cancelItemBtn.addEventListener("click", closeModal);
-    }
-
-    if (closeModalBtn) {
-        closeModalBtn.addEventListener("click", closeModal);
-    }
-
-    if (closeUpgradeModalBtn) {
-        closeUpgradeModalBtn.addEventListener("click", () => {
-            upgradeModal.classList.add("hidden");
-        });
-    }
-
-    if (menuItemForm) {
-        menuItemForm.addEventListener("submit", handleFormSubmit);
-    }
-
-    if (categorySelect) {
-        categorySelect.addEventListener("change", handleCategoryChange);
-    }
-
+    addMenuItemBtn?.addEventListener("click", () => openModal());
+    cancelItemBtn?.addEventListener("click", closeModal);
+    closeModalBtn?.addEventListener("click", closeModal);
+    closeUpgradeModalBtn?.addEventListener("click", () => upgradeModal?.classList.add("hidden"));
+    menuItemForm?.addEventListener("submit", handleFormSubmit);
+    categorySelect?.addEventListener("change", handleCategoryChange);
     listenersAttached = true;
 }
 
-/**
- * Initializes the Menu Builder
- * @param {string} uid
- * @param {string} plan
- * @param {string} currencySymbol
- */
 export function initMenuItems(uid, plan = "preview", currencySymbol = "£") {
     currentUserId = uid;
     currentUserPlan = plan;
     currentCurrencySymbol = currencySymbol;
-
     attachEventListeners();
     fetchMenuItems();
 }
 
-/**
- * Updates the currency symbol and re-renders menu items
- * @param {string} newSymbol
- */
 export function updateMenuCurrency(newSymbol) {
     currentCurrencySymbol = newSymbol;
     fetchMenuItems();
 }
 
-/**
- * Opens the modal for adding or editing
- * @param {Object|null} item - Item to edit, or null for new item
- */
+function categoryAllowed(categoryValue) {
+    if (currentUserPlan === "pro") return true;
+    if (currentUserPlan === "standard") return categoryValue !== "custom";
+    return Object.prototype.hasOwnProperty.call(PREVIEW_LIMITS, getNormalizedCategory(categoryValue));
+}
+
+function updateCategoryLocks() {
+    if (!categorySelect) return;
+    Array.from(categorySelect.options).forEach(option => {
+        const locked = !categoryAllowed(option.value);
+        option.text = option.text.replace(" 🔒", "") + (locked ? " 🔒" : "");
+    });
+}
+
+function updateFeaturedGate() {
+    const featured = document.getElementById("item-featured");
+    if (!featured) return;
+    featured.disabled = currentUserPlan !== "pro";
+    if (currentUserPlan !== "pro") featured.checked = false;
+    const label = featured.closest("label");
+    if (label) label.title = currentUserPlan === "pro" ? "" : "Featured items are available on Premium.";
+}
+
 function openModal(item = null) {
+    if (!menuItemForm) return;
     menuItemForm.reset();
     document.getElementById("item-id").value = item ? item.id : "";
-    modalTitle.innerText = item ? "Edit Menu Item" : "Add Menu Item";
-
-    // Update category options based on plan
-    if (categorySelect) {
-        Array.from(categorySelect.options).forEach(option => {
-            const isProCategory = ["custom"].includes(option.value);
-            const isStandardCategory = ["Sides", "Specials"].includes(option.value);
-
-            let isLocked = false;
-            if (currentUserPlan === "preview" && (isStandardCategory || isProCategory)) {
-                isLocked = true;
-            } else if (currentUserPlan === "standard" && isProCategory) {
-                isLocked = true;
-            }
-
-            if (isLocked) {
-                if (!option.text.includes("🔒")) {
-                    option.text = option.text + " 🔒";
-                }
-            } else {
-                option.text = option.text.replace(" 🔒", "");
-            }
-        });
-    }
+    if (modalTitle) modalTitle.innerText = item ? "Edit Menu Item" : "Add Menu Item";
+    updateCategoryLocks();
+    updateFeaturedGate();
 
     if (item) {
         document.getElementById("item-name").value = item.name || "";
         document.getElementById("item-description").value = item.description || "";
         document.getElementById("item-price").value = item.price || "";
-
-        const standardCategories = ["Main Courses", "Starters", "Drinks", "Desserts", "Sides", "Specials"];
-        if (standardCategories.includes(item.category)) {
+        if (STANDARD_CATEGORIES.includes(item.category)) {
             categorySelect.value = item.category;
-            customCategoryGroup.classList.add("hidden");
+            customCategoryGroup?.classList.add("hidden");
         } else {
             categorySelect.value = "custom";
-            customCategoryGroup.classList.remove("hidden");
-            document.getElementById("custom-category").value = item.category || "";
+            customCategoryGroup?.classList.remove("hidden");
+            const customInput = document.getElementById("custom-category");
+            if (customInput) customInput.value = item.category || "";
         }
-
         document.getElementById("item-available").checked = item.available !== false;
-        document.getElementById("item-featured").checked = !!item.featured;
+        const featured = document.getElementById("item-featured");
+        if (featured) featured.checked = currentUserPlan === "pro" && !!item.featured;
     } else {
         categorySelect.value = "Main Courses";
-        customCategoryGroup.classList.add("hidden");
+        customCategoryGroup?.classList.add("hidden");
         document.getElementById("item-available").checked = true;
-        document.getElementById("item-featured").checked = false;
     }
 
     previousCategory = categorySelect.value;
-    menuItemModal.classList.remove("hidden");
+    menuItemModal?.classList.remove("hidden");
 }
 
-/**
- * Closes the modal
- */
 function closeModal() {
-    menuItemModal.classList.add("hidden");
-    menuItemForm.reset();
+    menuItemModal?.classList.add("hidden");
+    menuItemForm?.reset();
 }
 
-/**
- * Handles category dropdown changes
- */
 function handleCategoryChange() {
-    const selectedValue = categorySelect.value;
-    const isProCategory = ["custom"].includes(selectedValue);
-    const isStandardCategory = ["Sides", "Specials"].includes(selectedValue);
-
-    let isLocked = false;
-    if (currentUserPlan === "preview" && (isStandardCategory || isProCategory)) {
-        isLocked = true;
-    } else if (currentUserPlan === "standard" && isProCategory) {
-        isLocked = true;
-    }
-
-    if (isLocked) {
+    const selected = categorySelect.value;
+    if (!categoryAllowed(selected)) {
         categorySelect.value = previousCategory;
-        const msg = selectedValue === "custom"
-            ? "Upgrade to Pro to unlock custom categories!"
-            : "Upgrade to Standard or Pro to unlock advanced menu categories!";
-        showUpgradeModal(msg);
+        showUpgradeModal(selected === "custom"
+            ? "Upgrade to Premium to unlock custom categories."
+            : "Preview includes Main Courses, Sides and Drinks only. Upgrade to Standard for more categories.");
         return;
     }
-
-    previousCategory = selectedValue;
-
-    if (selectedValue === "custom") {
-        customCategoryGroup.classList.remove("hidden");
-    } else {
-        customCategoryGroup.classList.add("hidden");
-    }
+    previousCategory = selected;
+    customCategoryGroup?.classList.toggle("hidden", selected !== "custom");
 }
 
-/**
- * Shows the Pro upgrade modal
- */
-function showUpgradeModal(customMessage) {
-    if (upgradeModal) {
-        const titleEl = document.getElementById('upgrade-modal-title');
-        const descEl = document.getElementById('upgrade-modal-description');
-        const upgradeStandardBtn = document.getElementById('upgrade-standard-btn');
-        const upgradeProBtn = document.getElementById('upgrade-pro-btn');
-
-        if (customMessage) {
-            if (descEl) descEl.innerText = customMessage;
-        }
-
-        if (customMessage && customMessage.includes("Pro")) {
-            if (titleEl) titleEl.innerText = "Upgrade to Pro";
-            if (upgradeStandardBtn) upgradeStandardBtn.classList.add('hidden');
-            if (upgradeProBtn) upgradeProBtn.classList.remove('hidden');
-        } else {
-            if (titleEl) titleEl.innerText = "Upgrade Your Plan";
-            if (currentUserPlan === "preview") {
-                if (upgradeStandardBtn) upgradeStandardBtn.classList.remove('hidden');
-                if (upgradeProBtn) upgradeProBtn.classList.remove('hidden');
-            } else if (currentUserPlan === "standard") {
-                if (upgradeStandardBtn) upgradeStandardBtn.classList.add('hidden');
-                if (upgradeProBtn) upgradeProBtn.classList.remove('hidden');
-            }
-        }
-
-        // Set up upgrade modal buttons if they haven't been (though dashboard.js should handle it, we ensure here)
-        if (upgradeStandardBtn) {
-            upgradeStandardBtn.onclick = () => window.open("https://www.paypal.com/ncp/payment/PU2EMNU3XNUJN", "_blank");
-        }
-        if (upgradeProBtn) {
-            upgradeProBtn.onclick = () => window.open("https://www.paypal.com/ncp/payment/B3FM4VTP4UPXE", "_blank");
-        }
-
-        upgradeModal.classList.remove("hidden");
-    } else {
-        alert(customMessage || "Upgrade to Pro to unlock advanced menu categories!");
+function showUpgradeModal(message) {
+    if (!upgradeModal) {
+        alert(message || "Upgrade your ScanMenu plan to continue.");
+        return;
     }
+    const title = document.getElementById("upgrade-modal-title");
+    const desc = document.getElementById("upgrade-modal-description");
+    const standardBtn = document.getElementById("upgrade-standard-btn");
+    const premiumBtn = document.getElementById("upgrade-pro-btn");
+    if (title) title.innerText = currentUserPlan === "standard" ? "Upgrade to Premium" : "Upgrade Your Plan";
+    if (desc) desc.innerText = message || "Choose the plan that fits your menu.";
+    if (standardBtn) {
+        standardBtn.classList.toggle("hidden", currentUserPlan !== "preview");
+        standardBtn.onclick = () => { window.location.href = "pricing.html"; };
+    }
+    if (premiumBtn) {
+        premiumBtn.classList.remove("hidden");
+        premiumBtn.innerText = "View Premium";
+        premiumBtn.onclick = () => { window.location.href = "pricing.html"; };
+    }
+    upgradeModal.classList.remove("hidden");
 }
 
-/**
- * Handles form submission for both add and edit
- * @param {Event} e
- */
 async function handleFormSubmit(e) {
     e.preventDefault();
-
     const itemId = document.getElementById("item-id").value;
     const name = document.getElementById("item-name").value.trim();
     const description = document.getElementById("item-description").value.trim();
     const price = parseFloat(document.getElementById("item-price").value);
-
     let category = categorySelect.value;
-    if (category === "custom") {
-        category = document.getElementById("custom-category").value.trim() || "Other";
-    }
-
+    if (category === "custom") category = document.getElementById("custom-category").value.trim() || "Other";
     const available = document.getElementById("item-available").checked;
-    const featured = document.getElementById("item-featured").checked;
+    const featuredRequested = document.getElementById("item-featured")?.checked === true;
 
-    if (!name || isNaN(price)) {
+    if (!name || Number.isNaN(price)) {
         showError("Please fill in all required fields and provide a valid price.");
         return;
     }
-
-    const itemData = {
-        restaurantId: currentUserId,
-        name,
-        description,
-        price,
-        category,
-        available,
-        featured,
-        updatedAt: serverTimestamp()
-    };
-
-    // Plan validation
-    if (currentUserPlan !== "pro") {
-        const normalizedCategory = getNormalizedCategory(category);
-        const isStandardCategory = ["Sides", "Specials"].includes(category);
-        const isProCategory = categorySelect.value === "custom" || (!normalizedCategory && !isStandardCategory);
-
-        // Category checks
-        if (currentUserPlan === "preview" && (isStandardCategory || isProCategory)) {
-            showUpgradeModal("Upgrade to Standard or Pro to unlock advanced menu categories!");
-            return;
-        }
-        if (currentUserPlan === "standard" && isProCategory) {
-            showUpgradeModal("Upgrade to Pro to unlock custom categories!");
-            return;
-        }
-
-        // Limit checks
-        try {
-            const q = query(
-                collection(db, "menuItems"),
-                where("restaurantId", "==", currentUserId)
-            );
-            const querySnapshot = await getDocs(q);
-
-            const items = querySnapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-            const totalCount = items.length;
-            const isEdit = !!itemId;
-
-            if (currentUserPlan === "preview") {
-                if (normalizedCategory) {
-                    const limits = {
-                        "Main Courses": 4,
-                        "Drinks": 2,
-                        "Starters": 2,
-                        "Desserts": 2
-                    };
-                    const limit = limits[normalizedCategory];
-                    const categoryCount = items.filter(it => getNormalizedCategory(it.category) === normalizedCategory).length;
-
-                    let isAlreadyInThisCategory = false;
-                    if (isEdit) {
-                        const existingItem = items.find(it => it.id === itemId);
-                        if (existingItem && getNormalizedCategory(existingItem.category) === normalizedCategory) {
-                            isAlreadyInThisCategory = true;
-                        }
-                    }
-
-                    if (!isAlreadyInThisCategory && categoryCount >= limit) {
-                        showError(`You've reached the Preview Plan limit for ${normalizedCategory} (${limit}). Upgrade to Standard or Pro for more items.`);
-                        showUpgradeModal("Upgrade to Standard or Pro to unlock more menu items!");
-                        return;
-                    }
-                }
-            } else if (currentUserPlan === "standard") {
-                let isAlreadyExisting = false;
-                if (isEdit) {
-                    isAlreadyExisting = items.some(it => it.id === itemId);
-                }
-
-                if (!isAlreadyExisting && totalCount >= 50) {
-                    showError(`You've reached the Standard Plan limit of 50 menu items. Upgrade to Pro for unlimited items.`);
-                    showUpgradeModal("You've reached your Standard Plan limit of 50 menu items. Upgrade to Pro for unlimited items!");
-                    return;
-                }
-            }
-        } catch (error) {
-            console.error("Error checking plan limits:", error);
-        }
+    if (!categoryAllowed(categorySelect.value)) {
+        showUpgradeModal(categorySelect.value === "custom"
+            ? "Custom categories are available on Premium."
+            : "Upgrade to Standard to unlock this category.");
+        return;
+    }
+    if (featuredRequested && currentUserPlan !== "pro") {
+        showUpgradeModal("Featured Menu Items are available on Premium.");
+        return;
     }
 
-    // Debug logging
-    console.log("auth.currentUser.uid:", auth.currentUser ? auth.currentUser.uid : "null");
-    console.log("menu item payload:", itemData);
-    console.log("restaurantId value:", itemData.restaurantId);
-    console.log("price value:", itemData.price);
-    console.log("price type:", typeof itemData.price);
-
     try {
+        const q = query(collection(db, "menuItems"), where("restaurantId", "==", currentUserId));
+        const snapshot = await getDocs(q);
+        const items = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+        const existing = itemId ? items.find(item => item.id === itemId) : null;
+
+        if (currentUserPlan === "preview") {
+            const normalized = getNormalizedCategory(category);
+            const limit = PREVIEW_LIMITS[normalized];
+            if (!limit) {
+                showUpgradeModal("Preview includes 3 Main Courses, 2 Sides and 2 Drinks only.");
+                return;
+            }
+            const count = items.filter(item => getNormalizedCategory(item.category) === normalized).length;
+            const stayingInCategory = existing && getNormalizedCategory(existing.category) === normalized;
+            if (!stayingInCategory && count >= limit) {
+                showError(`Preview allows ${limit} ${normalized}. Upgrade to Standard for up to 25 menu items.`);
+                showUpgradeModal("You've reached a Preview menu limit. Upgrade to Standard to continue.");
+                return;
+            }
+        }
+
+        if (currentUserPlan === "standard" && !existing && items.length >= STANDARD_ITEM_LIMIT) {
+            showError("You've reached the Standard Plan limit of 25 menu items.");
+            showUpgradeModal("Upgrade to Premium for unlimited menu items.");
+            return;
+        }
+
+        const itemData = {
+            restaurantId: currentUserId,
+            name, description, price, category, available,
+            featured: currentUserPlan === "pro" && featuredRequested,
+            updatedAt: serverTimestamp()
+        };
+
         if (itemId) {
-            // Update
             await updateDoc(doc(db, "menuItems", itemId), itemData);
             showSuccess("Menu item updated successfully!");
         } else {
-            // Create
             itemData.createdAt = serverTimestamp();
             await addDoc(collection(db, "menuItems"), itemData);
             showSuccess("Menu item added successfully!");
         }
-
         closeModal();
         fetchMenuItems();
     } catch (error) {
-        console.error("Detailed Error saving menu item:", error);
-        // Expose raw error message for debugging as requested
-        showError(`Firebase Error: ${error.message || error.code || "Unknown error"}`);
+        console.error("Error saving menu item:", error);
+        showError(getFriendlyErrorMessage(error));
     }
 }
 
-/**
- * Fetches menu items from Firestore
- */
 async function fetchMenuItems() {
     if (!currentUserId || !menuItemsList) return;
-
     try {
-        const q = query(
-            collection(db, "menuItems"),
-            where("restaurantId", "==", currentUserId)
-        );
-
-        const querySnapshot = await getDocs(q);
-        const items = [];
-        querySnapshot.forEach((doc) => {
-            items.push({ id: doc.id, ...doc.data() });
-        });
-
-        renderMenuItems(items);
+        const q = query(collection(db, "menuItems"), where("restaurantId", "==", currentUserId));
+        const snapshot = await getDocs(q);
+        renderMenuItems(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
     } catch (error) {
         console.error("Error fetching menu items:", error);
         showError(getFriendlyErrorMessage(error));
     }
 }
 
-/**
- * Renders the menu items in the dashboard
- * @param {Array} items
- */
 function renderMenuItems(items) {
-    console.log("Rendering Menu With:", currentCurrencySymbol);
     menuItemsList.innerHTML = "";
-
-    if (items.length === 0) {
+    if (!items.length) {
         menuItemsList.innerHTML = '<p class="text-muted">No menu items added yet. Click the button above to create your first item!</p>';
         return;
     }
-
     items.forEach(item => {
         const card = document.createElement("div");
         card.className = "menu-item-card";
-
-        // Header
-        const header = document.createElement("div");
-        header.className = "menu-item-header";
-        const nameSpan = document.createElement("span");
-        nameSpan.className = "menu-item-name";
-        nameSpan.textContent = item.name;
-        const priceSpan = document.createElement("span");
-        priceSpan.className = "menu-item-price";
-        priceSpan.textContent = `${currentCurrencySymbol}${item.price.toFixed(2)}`;
-        header.appendChild(nameSpan);
-        header.appendChild(priceSpan);
-
-        // Category
-        const categoryDiv = document.createElement("div");
-        categoryDiv.className = "menu-item-category";
-        categoryDiv.textContent = item.category;
-
-        // Description
-        const descDiv = document.createElement("div");
-        descDiv.className = "menu-item-description";
-        descDiv.textContent = item.description || "";
-
-        // Badges
-        const badgesDiv = document.createElement("div");
-        badgesDiv.className = "menu-item-badges";
-        const availBadge = document.createElement("span");
-        availBadge.className = `badge ${item.available ? 'badge-available' : 'badge-unavailable'}`;
-        availBadge.textContent = item.available ? 'Available' : 'Unavailable';
-        badgesDiv.appendChild(availBadge);
-        if (item.featured) {
-            const featuredBadge = document.createElement("span");
-            featuredBadge.className = "badge badge-featured";
-            featuredBadge.textContent = "★ Featured";
-            badgesDiv.appendChild(featuredBadge);
+        const safePrice = Number(item.price || 0).toFixed(2);
+        card.innerHTML = `
+            <div class="menu-item-header"><span class="menu-item-name"></span><span class="menu-item-price"></span></div>
+            <div class="menu-item-category"></div>
+            <div class="menu-item-description"></div>
+            <div class="menu-item-badges"></div>
+            <div class="menu-item-actions"></div>`;
+        card.querySelector(".menu-item-name").textContent = item.name || "";
+        card.querySelector(".menu-item-price").textContent = `${currentCurrencySymbol}${safePrice}`;
+        card.querySelector(".menu-item-category").textContent = item.category || "";
+        card.querySelector(".menu-item-description").textContent = item.description || "";
+        const badges = card.querySelector(".menu-item-badges");
+        const availability = document.createElement("span");
+        availability.className = `badge ${item.available ? "badge-available" : "badge-unavailable"}`;
+        availability.textContent = item.available ? "Available" : "Unavailable";
+        badges.appendChild(availability);
+        if (item.featured && currentUserPlan === "pro") {
+            const featured = document.createElement("span");
+            featured.className = "badge badge-featured";
+            featured.textContent = "★ Featured";
+            badges.appendChild(featured);
         }
-
-        // Actions
-        const actionsDiv = document.createElement("div");
-        actionsDiv.className = "menu-item-actions";
-        const editBtn = document.createElement("button");
-        editBtn.className = "btn btn-outline btn-small edit-btn";
-        editBtn.textContent = "Edit";
-        editBtn.addEventListener("click", () => openModal(item));
-        const deleteBtn = document.createElement("button");
-        deleteBtn.className = "btn btn-outline btn-small delete-btn";
-        deleteBtn.style.color = "var(--error-color)";
-        deleteBtn.textContent = "Delete";
-        deleteBtn.addEventListener("click", () => handleDeleteItem(item.id));
-        actionsDiv.appendChild(editBtn);
-        actionsDiv.appendChild(deleteBtn);
-
-        card.appendChild(header);
-        card.appendChild(categoryDiv);
-        card.appendChild(descDiv);
-        card.appendChild(badgesDiv);
-        card.appendChild(actionsDiv);
-
+        const actions = card.querySelector(".menu-item-actions");
+        const edit = document.createElement("button");
+        edit.className = "btn btn-outline btn-small edit-btn";
+        edit.textContent = "Edit";
+        edit.onclick = () => openModal(item);
+        const remove = document.createElement("button");
+        remove.className = "btn btn-outline btn-small delete-btn";
+        remove.style.color = "var(--error-color)";
+        remove.textContent = "Delete";
+        remove.onclick = () => handleDeleteItem(item.id);
+        actions.append(edit, remove);
         menuItemsList.appendChild(card);
     });
 }
 
-/**
- * Handles item deletion
- * @param {string} id
- */
 async function handleDeleteItem(id) {
-    if (confirm("Are you sure you want to delete this menu item?")) {
-        try {
-            await deleteDoc(doc(db, "menuItems", id));
-            showSuccess("Menu item deleted successfully!");
-            fetchMenuItems();
-        } catch (error) {
-            console.error("Error deleting item:", error);
-            showError(getFriendlyErrorMessage(error));
-        }
+    if (!confirm("Are you sure you want to delete this menu item?")) return;
+    try {
+        await deleteDoc(doc(db, "menuItems", id));
+        showSuccess("Menu item deleted successfully!");
+        fetchMenuItems();
+    } catch (error) {
+        showError(getFriendlyErrorMessage(error));
     }
 }
 
-/**
- * Error handling helper
- * @param {Error} error
- */
-function getFriendlyErrorMessage(error) {
-    if (error.code === 'permission-denied') {
-        return "You don't have permission to perform this action.";
-    }
-    if (error.message && error.message.includes("network")) {
-        return "Network error. Please check your connection.";
-    }
-    return "An unexpected error occurred. Please try again.";
-}
-
-/**
- * Shows error message
- * @param {string} message
- */
-function showError(message) {
-    if (menuError) {
-        menuError.innerText = message;
-        menuError.classList.remove("error-box");
-        menuError.classList.add("error-box");
-        menuError.classList.remove("hidden");
-        setTimeout(() => menuError.classList.add("hidden"), 5000);
-    } else {
-        alert(message);
-    }
-}
-
-/**
- * Normalizes category name for plan limit checks
- * @param {string} category
- * @returns {string|null}
- */
 function getNormalizedCategory(category) {
     if (!category) return null;
     const cat = category.toLowerCase().trim();
-
-    if (cat === "main" || cat === "mains" || cat === "main courses" || cat === "main course") {
-        return "Main Courses";
-    }
-    if (cat === "starter" || cat === "starters") {
-        return "Starters";
-    }
-    if (cat === "drink" || cat === "drinks") {
-        return "Drinks";
-    }
-    if (cat === "dessert" || cat === "desserts") {
-        return "Desserts";
-    }
-    if (cat === "side" || cat === "sides") {
-        return "Sides";
-    }
-    if (cat === "special" || cat === "specials") {
-        return "Specials";
-    }
-
+    if (["main", "mains", "main courses", "main course"].includes(cat)) return "Main Courses";
+    if (["starter", "starters"].includes(cat)) return "Starters";
+    if (["drink", "drinks"].includes(cat)) return "Drinks";
+    if (["dessert", "desserts"].includes(cat)) return "Desserts";
+    if (["side", "sides"].includes(cat)) return "Sides";
+    if (["special", "specials"].includes(cat)) return "Specials";
     return null;
 }
 
-/**
- * Shows success message
- * @param {string} message
- */
+function getFriendlyErrorMessage(error) {
+    if (error?.code === "permission-denied") return "You don't have permission to perform this action.";
+    if (error?.message?.includes("network")) return "Network error. Please check your connection.";
+    return "An unexpected error occurred. Please try again.";
+}
+
+function showError(message) {
+    if (!menuError) return alert(message);
+    menuError.innerText = message;
+    menuError.classList.add("error-box");
+    menuError.classList.remove("hidden");
+    setTimeout(() => menuError.classList.add("hidden"), 5000);
+}
+
 function showSuccess(message) {
-    if (menuError) {
-        menuError.innerText = message;
-        menuError.classList.remove("error-box");
-        menuError.style.backgroundColor = "#dcfce7";
-        menuError.style.color = "#166534";
-        menuError.classList.remove("hidden");
-        setTimeout(() => {
-            menuError.classList.add("hidden");
-            menuError.classList.add("error-box");
-            menuError.style.backgroundColor = "";
-            menuError.style.color = "";
-        }, 5000);
-    } else {
-        alert(message);
-    }
+    if (!menuError) return alert(message);
+    menuError.innerText = message;
+    menuError.classList.remove("error-box");
+    menuError.style.backgroundColor = "#dcfce7";
+    menuError.style.color = "#166534";
+    menuError.classList.remove("hidden");
+    setTimeout(() => {
+        menuError.classList.add("hidden");
+        menuError.classList.add("error-box");
+        menuError.style.backgroundColor = "";
+        menuError.style.color = "";
+    }, 5000);
 }
