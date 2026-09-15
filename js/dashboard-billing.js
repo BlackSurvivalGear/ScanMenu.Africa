@@ -3,6 +3,18 @@ import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.14.0/f
 import { doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js';
 import { startCheckout, openCustomerPortal, planDisplayName } from './billing.js';
 
+function enforceQrPlan(plan) {
+    const style = document.getElementById('qr-style-select');
+    const logo = document.getElementById('qr-use-logo');
+    if (!style) return;
+    const premium = plan === 'pro';
+    Array.from(style.options).forEach(option => {
+        if (option.value !== 'classic') { option.disabled = !premium; option.textContent = option.textContent.replace(' 🔒','') + (!premium ? ' 🔒' : ''); }
+    });
+    if (!premium && style.value !== 'classic') { style.value = 'classic'; style.dispatchEvent(new Event('change', { bubbles: true })); }
+    if (logo) { logo.disabled = !premium; if (!premium) logo.checked = false; logo.closest('label')?.setAttribute('title', premium ? '' : 'Logo in QR is available on Premium.'); }
+}
+
 onAuthStateChanged(auth, async user => {
     if (!user) return;
     const snap = await getDoc(doc(db, 'users', user.uid));
@@ -19,9 +31,10 @@ onAuthStateChanged(auth, async user => {
             catch (error) { alert(error.message); manage.disabled = false; }
         });
     }
+    enforceQrPlan(plan);
+    new MutationObserver(() => enforceQrPlan(plan)).observe(document.getElementById('qr-code-section') || document.body, { childList: true, subtree: true });
 });
 
-// Capture upgrade clicks before legacy handlers so no PayPal destination can run.
 document.addEventListener('click', async event => {
     const button = event.target.closest('#upgrade-standard-btn, #upgrade-pro-btn');
     if (!button) return;
