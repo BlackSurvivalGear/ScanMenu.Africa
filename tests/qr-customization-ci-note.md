@@ -1,1 +1,0 @@
-CI performs JavaScript syntax validation and QR customization source regression checks. Browser scan verification remains manual.
