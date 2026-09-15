@@ -1,0 +1,1 @@
+QR customization accepts browser colour-input values only and does not alter the encoded menu URL, authentication state, database records, or payment state.
