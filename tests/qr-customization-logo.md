@@ -1,1 +1,0 @@
-Use Business Logo defaults on. If no business logo exists, QR generation continues without one. Disabling the option always produces a logo-free QR.
