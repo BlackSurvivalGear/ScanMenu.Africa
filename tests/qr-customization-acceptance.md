@@ -1,0 +1,1 @@
+Acceptance: Classic remains default; Brand Gold and Premium Branded available; foreground/background colour pickers; logo toggle; contrast protection; reset; selected generated style is the downloaded PNG; no Firestore/schema changes; Menu Builder actions preserved.
