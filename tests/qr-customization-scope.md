@@ -1,0 +1,1 @@
+This PR changes QR presentation only. It does not change Firestore data, authentication, menus, payments, plans, geocoding, or public-menu routing.
