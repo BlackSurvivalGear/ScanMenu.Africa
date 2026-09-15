@@ -28,7 +28,7 @@ function enhanceHeroVideo() {
             // Restore the seamless mobile crop so the video edges never show.
             video.style.objectPosition = "center center";
         } else {
-            // Shift the desktop artwork down slightly so more of the upper composition is visible.
+            // Lower the desktop artwork slightly within the hero instead of centring the crop.
             video.style.objectPosition = "center 38%";
         }
     };
