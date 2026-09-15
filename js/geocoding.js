@@ -1,24 +1,20 @@
 /**
  * Progressive fallback geocoding using Nominatim
  */
-export async function progressiveGeocode(address, city, country, userAgent = 'ScanMenu Africa Melanin Map') {
+export async function progressiveGeocode(address, city, country, userAgent = 'ScanMenu Africa') {
     const cleanAddress = address ? address.trim() : "";
     const cleanCity = city ? city.trim() : "";
     const cleanCountry = country ? country.trim() : "";
 
     const attempts = [];
-
-    // Attempt 1: [address]
     attempts.push(cleanAddress);
 
-    // Attempt 2: [address], [city] (if city not already in address)
     let attempt2 = cleanAddress;
     if (cleanCity && !cleanAddress.toLowerCase().includes(cleanCity.toLowerCase())) {
         attempt2 += (attempt2 ? ", " : "") + cleanCity;
     }
     attempts.push(attempt2);
 
-    // Attempt 3: [address], [city], [country] (prevent duplicates)
     let attempt3 = cleanAddress;
     if (cleanCity && !cleanAddress.toLowerCase().includes(cleanCity.toLowerCase())) {
         attempt3 += (attempt3 ? ", " : "") + cleanCity;
@@ -28,16 +24,12 @@ export async function progressiveGeocode(address, city, country, userAgent = 'Sc
     }
     attempts.push(attempt3);
 
-    // Attempt 4: [city], [country]
     let attempt4 = "";
     if (cleanCity) attempt4 += cleanCity;
     if (cleanCountry) attempt4 += (attempt4 ? ", " : "") + cleanCountry;
     attempts.push(attempt4);
-
-    // Attempt 5: [country]
     attempts.push(cleanCountry);
 
-    // Remove empty attempts and duplicates to be efficient
     const uniqueAttempts = [...new Set(attempts.filter(a => a !== ""))];
 
     for (const query of uniqueAttempts) {
