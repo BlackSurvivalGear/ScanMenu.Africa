@@ -11,7 +11,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 /**
- * Makes the animated hero artwork clearer while preserving the full composition on mobile.
+ * Makes the animated hero artwork clearer without exposing the video's edges on mobile.
  */
 function enhanceHeroVideo() {
     const videoContainer = document.querySelector(".hero-video-container");
@@ -21,14 +21,15 @@ function enhanceHeroVideo() {
     videoContainer.style.opacity = "0.25";
 
     const applyFraming = () => {
+        video.style.objectFit = "cover";
+        video.style.transform = "none";
+
         if (window.matchMedia("(max-width: 640px)").matches) {
-            video.style.objectFit = "contain";
+            // Restore the seamless mobile crop so the video edges never show.
             video.style.objectPosition = "center center";
-            video.style.transform = "scale(0.92)";
         } else {
-            video.style.objectFit = "cover";
-            video.style.objectPosition = "center center";
-            video.style.transform = "none";
+            // Shift the desktop artwork down slightly so more of the upper composition is visible.
+            video.style.objectPosition = "center 38%";
         }
     };
 
