@@ -1,1 +1,0 @@
-Premium Branded output uses a larger 420×500 canvas intended for printable/table-display use while retaining the QR at 300×300 inside the frame.
