@@ -1,11 +1,5 @@
 import qrcode from "./qrcode.js";
 
-/**
- * QR Code Manager Module
- * Handles generation, preview, download, and link copying.
- */
-
-// DOM Elements
 const generateBtn = document.getElementById("generate-qr-btn");
 const openMenuBtn = document.getElementById("open-menu-btn");
 const downloadBtn = document.getElementById("download-qr-btn");
@@ -19,224 +13,155 @@ let currentUid = null;
 let currentBizName = "restaurant";
 let publicMenuUrl = "";
 let currentLogoUrl = "";
+let listenersBound = false;
 
-/**
- * Initialize the QR Manager
- * @param {string} uid - Authenticated user UID
- * @param {string} businessName - Restaurant business name
- * @param {string} logoUrl - Restaurant logo URL
- */
 export function initQRManager(uid, businessName, logoUrl = "") {
     if (!uid) return;
-
     currentUid = uid;
     currentBizName = businessName || "Restaurant";
-    currentLogoUrl = logoUrl;
-    // Keep it relative or dynamic for sandbox
-    const host = window.location.host;
-    const protocol = window.location.protocol;
-    publicMenuUrl = `${protocol}//${host}/menu.html?id=${uid}`;
+    currentLogoUrl = logoUrl || "";
+    publicMenuUrl = `${window.location.protocol}//${window.location.host}/menu.html?id=${uid}`;
+    renderBusinessBranding();
 
-    if (generateBtn) {
-        generateBtn.addEventListener("click", handleGenerateQR);
-    }
-
-    if (openMenuBtn) {
-        openMenuBtn.addEventListener("click", handleOpenMenu);
-    }
-
-    if (downloadBtn) {
-        downloadBtn.addEventListener("click", handleDownloadPNG);
-    }
-
-    if (copyLinkBtn) {
-        copyLinkBtn.addEventListener("click", handleCopyLink);
+    if (!listenersBound) {
+        generateBtn?.addEventListener("click", handleGenerateQR);
+        openMenuBtn?.addEventListener("click", handleOpenMenu);
+        downloadBtn?.addEventListener("click", handleDownloadPNG);
+        copyLinkBtn?.addEventListener("click", handleCopyLink);
+        listenersBound = true;
     }
 }
 
-/**
- * Handle QR Code Generation
- */
-function handleGenerateQR() {
+function renderBusinessBranding() {
+    const profile = document.getElementById("restaurant-details");
+    if (!profile) return;
+    const headingText = profile.querySelector("h3 span") || profile.querySelector("h3");
+    if (headingText) headingText.textContent = "Business Profile";
+
+    const bizName = document.getElementById("biz-name");
+    if (bizName) {
+        bizName.style.fontSize = "1.35rem";
+        bizName.style.fontWeight = "800";
+        bizName.style.color = "var(--text-color)";
+    }
+
+    let brand = document.getElementById("business-profile-brand");
+    if (!brand) {
+        brand = document.createElement("div");
+        brand.id = "business-profile-brand";
+        brand.style.cssText = "display:flex;flex-direction:column;align-items:center;gap:.65rem;margin:1rem 0 1.25rem;text-align:center";
+        const firstDetail = profile.querySelector(".detail-item");
+        profile.insertBefore(brand, firstDetail);
+    }
+    brand.innerHTML = "";
+    if (currentLogoUrl) {
+        const logo = document.createElement("img");
+        logo.src = currentLogoUrl;
+        logo.alt = `${currentBizName} logo`;
+        logo.style.cssText = "width:110px;height:110px;object-fit:contain;border-radius:14px;border:1px solid var(--border-color);background:white;padding:8px";
+        brand.appendChild(logo);
+    }
+    const name = document.createElement("div");
+    name.textContent = currentBizName;
+    name.style.cssText = "font-size:1.6rem;font-weight:800;line-height:1.15;color:var(--text-color)";
+    brand.appendChild(name);
+}
+
+async function handleGenerateQR() {
     try {
         hideFeedback();
-
-        // Generate QR code data
-        const qr = qrcode(0, 'H'); // Type 0 (auto), Error Correction Level H (High)
+        const qr = qrcode(0, "H");
         qr.addData(publicMenuUrl);
         qr.make();
-
-        // Create Canvas for better control and download
-        const cellSize = 8;
         const margin = 20;
         const qrSize = qr.getModuleCount();
-
-        const canvas = document.createElement('canvas');
-        canvas.width = 300; // Force 300x300 as per requirements
+        const canvas = document.createElement("canvas");
+        canvas.width = 300;
         canvas.height = 300;
-        const ctx = canvas.getContext('2d');
-
-        // Fill background
+        const ctx = canvas.getContext("2d");
         ctx.fillStyle = "white";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-        // Draw QR code scaled to fit 300x300 with margin
-        const scale = (300 - margin * 2) / (qrSize * cellSize);
-
-        ctx.save();
-        ctx.translate(margin, margin);
-        ctx.scale(scale * cellSize, scale * cellSize);
-
+        ctx.fillRect(0, 0, 300, 300);
+        const moduleSize = (300 - margin * 2) / qrSize;
         for (let row = 0; row < qrSize; row++) {
             for (let col = 0; col < qrSize; col++) {
                 if (qr.isDark(row, col)) {
                     ctx.fillStyle = "black";
-                    ctx.fillRect(col, row, 1, 1);
+                    ctx.fillRect(margin + col * moduleSize, margin + row * moduleSize, Math.ceil(moduleSize), Math.ceil(moduleSize));
                 }
             }
         }
-        ctx.restore();
+        if (currentLogoUrl) await drawLogoInQr(ctx, currentLogoUrl);
 
-        // Update UI - Reorder branding elements
         qrPreviewContainer.innerHTML = "";
         qrPreviewContainer.style.flexDirection = "column";
-        qrPreviewContainer.style.gap = "1.5rem";
-        qrPreviewContainer.style.padding = "2rem 1rem";
+        qrPreviewContainer.style.gap = "1rem";
+        qrPreviewContainer.style.padding = "1.5rem 1rem";
         qrPreviewContainer.style.height = "auto";
-        qrPreviewContainer.style.minHeight = "450px";
-
-        // 1. QR Code
+        qrPreviewContainer.style.minHeight = "420px";
         qrPreviewContainer.appendChild(canvas);
 
-        // 2. Restaurant Logo (if available)
-        if (currentLogoUrl) {
-            const logoImg = document.createElement("img");
-            logoImg.src = currentLogoUrl;
-            logoImg.className = "qr-logo-preview";
-            logoImg.style.marginTop = "0"; // Reset margin
-            qrPreviewContainer.appendChild(logoImg);
-        }
-
-        // 3. Business Name
         const bizNameLabel = document.createElement("div");
         bizNameLabel.textContent = currentBizName;
-        bizNameLabel.style.fontSize = "1.25rem";
-        bizNameLabel.style.fontWeight = "700";
-        bizNameLabel.style.color = "var(--text-color)";
+        bizNameLabel.style.cssText = "font-size:1.4rem;font-weight:800;color:var(--text-color);text-align:center";
         qrPreviewContainer.appendChild(bizNameLabel);
 
-        // 4. Clickable Menu Link
         const menuLink = document.createElement("a");
         menuLink.href = publicMenuUrl;
         menuLink.target = "_blank";
         menuLink.rel = "noopener";
-        menuLink.textContent = "Open Restaurant Menu";
-        menuLink.style.fontSize = "1rem";
-        menuLink.style.color = "var(--primary-color)";
-        menuLink.style.textDecoration = "none";
-        menuLink.style.fontWeight = "600";
-        menuLink.addEventListener("mouseover", () => menuLink.style.textDecoration = "underline");
-        menuLink.addEventListener("mouseout", () => menuLink.style.textDecoration = "none");
+        menuLink.textContent = "Open Business Menu";
+        menuLink.style.cssText = "font-size:1rem;color:var(--primary-color);text-decoration:none;font-weight:600";
         qrPreviewContainer.appendChild(menuLink);
 
-        // 5. Buttons Row
-        qrDownloadActions.classList.remove("hidden");
-        qrDownloadActions.style.marginTop = "0.5rem";
-        qrPreviewContainer.appendChild(qrDownloadActions);
-
-        console.log("QR Code generated successfully for:", currentBizName);
-
+        qrDownloadActions?.classList.remove("hidden");
+        if (qrDownloadActions) {
+            qrDownloadActions.style.marginTop = ".5rem";
+            qrPreviewContainer.appendChild(qrDownloadActions);
+        }
     } catch (error) {
         console.error("QR Generation Error:", error);
         showError("Unable to generate QR code. Please try again.");
     }
 }
 
-/**
- * Handle Open Menu
- */
-function handleOpenMenu() {
-    if (publicMenuUrl) {
-        window.open(publicMenuUrl, '_blank');
-    }
+function drawLogoInQr(ctx, url) {
+    return new Promise(resolve => {
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.onload = () => {
+            const size = 72;
+            const x = (300 - size) / 2;
+            const y = (300 - size) / 2;
+            ctx.fillStyle = "white";
+            ctx.fillRect(x - 6, y - 6, size + 12, size + 12);
+            ctx.drawImage(img, x, y, size, size);
+            resolve();
+        };
+        img.onerror = () => resolve();
+        img.src = url;
+    });
 }
 
-/**
- * Handle PNG Download
- */
+function handleOpenMenu() { if (publicMenuUrl) window.open(publicMenuUrl, "_blank"); }
 function handleDownloadPNG() {
     try {
-        const canvas = qrPreviewContainer.querySelector("canvas");
-        if (!canvas) {
-            showError("Please generate a QR code first.");
-            return;
-        }
-
-        // Sanitize business name for filename
-        const sanitizedName = currentBizName
-            .toLowerCase()
-            .replace(/[^a-z0-9]/g, '-')
-            .replace(/-+/g, '-')
-            .replace(/^-|-$/g, '');
-
-        const filename = `${sanitizedName || 'restaurant'}-qr.png`;
-
-        // Create download link
+        const canvas = qrPreviewContainer?.querySelector("canvas");
+        if (!canvas) return showError("Please generate a QR code first.");
+        const sanitizedName = currentBizName.toLowerCase().replace(/[^a-z0-9]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
         const link = document.createElement("a");
-        link.download = filename;
+        link.download = `${sanitizedName || "business"}-qr.png`;
         link.href = canvas.toDataURL("image/png");
         link.click();
-    } catch (error) {
-        console.error("Download Error:", error);
-        showError("Download failure. Please try again.");
-    }
+    } catch (error) { console.error("Download Error:", error); showError("Download failure. Please try again."); }
 }
-
-/**
- * Handle Copy Link to Clipboard
- */
 async function handleCopyLink() {
     try {
         if (!publicMenuUrl) return;
-
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-            await navigator.clipboard.writeText(publicMenuUrl);
-            showMessage("✓ Menu link copied");
-        } else {
-            throw new Error("Clipboard unavailable");
-        }
-    } catch (error) {
-        console.error("Clipboard Error:", error);
-        showError("Clipboard unavailable or permission denied.");
-    }
+        if (!navigator.clipboard?.writeText) throw new Error("Clipboard unavailable");
+        await navigator.clipboard.writeText(publicMenuUrl);
+        showMessage("✓ Menu link copied");
+    } catch (error) { console.error("Clipboard Error:", error); showError("Clipboard unavailable or permission denied."); }
 }
-
-/**
- * Show error message
- */
-function showError(msg) {
-    if (qrError) {
-        qrError.textContent = msg;
-        qrError.classList.remove("hidden");
-        setTimeout(() => qrError.classList.add("hidden"), 5000);
-    }
-}
-
-/**
- * Show success message
- */
-function showMessage(msg) {
-    if (qrMessage) {
-        qrMessage.textContent = msg;
-        qrMessage.classList.remove("hidden");
-        setTimeout(() => qrMessage.classList.add("hidden"), 3000);
-    }
-}
-
-/**
- * Hide all feedback boxes
- */
-function hideFeedback() {
-    if (qrError) qrError.classList.add("hidden");
-    if (qrMessage) qrMessage.classList.add("hidden");
-}
+function showError(msg) { if (qrError) { qrError.textContent = msg; qrError.classList.remove("hidden"); setTimeout(() => qrError.classList.add("hidden"), 5000); } }
+function showMessage(msg) { if (qrMessage) { qrMessage.textContent = msg; qrMessage.classList.remove("hidden"); setTimeout(() => qrMessage.classList.add("hidden"), 3000); } }
+function hideFeedback() { qrError?.classList.add("hidden"); qrMessage?.classList.add("hidden"); }
