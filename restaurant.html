@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Restaurant Profile - ScanMenu.Africa</title>
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/cuisine-selector.css">
 </head>
 <body class="bg-light">
     <header>
@@ -32,158 +33,79 @@
                         <span id="no-logo-text">No logo uploaded.</span>
                         <img id="logo-preview" class="logo-preview hidden" src="" alt="Logo Preview">
                     </div>
-
                     <input type="file" id="logo-input" accept="image/png, image/jpeg, image/jpg, image/webp" class="hidden">
-
                     <div class="logo-actions" style="display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap;">
                         <button type="button" id="upload-logo-btn" class="btn btn-outline btn-small">Upload Logo</button>
                         <button type="button" id="replace-logo-btn" class="btn btn-outline btn-small hidden">Replace Logo</button>
                         <button type="button" id="remove-logo-btn" class="btn btn-outline btn-small hidden" style="color: var(--error-color); border-color: var(--error-color);">Remove Logo</button>
                     </div>
-
-                    <div id="upload-progress-container" class="progress-container hidden">
-                        <div id="upload-progress-bar" class="progress-bar"></div>
-                    </div>
+                    <div id="upload-progress-container" class="progress-container hidden"><div id="upload-progress-bar" class="progress-bar"></div></div>
                     <p id="upload-status" class="text-muted hidden" style="font-size: 0.8rem; margin-top: 0.5rem;"></p>
                 </div>
 
                 <form id="restaurant-form">
-                    <div class="form-group">
-                        <label for="businessName">Business Name</label>
-                        <input type="text" id="businessName" required placeholder="e.g. The Italian Bistro">
-                    </div>
-                    <div class="form-group">
-                        <label for="ownerName">Owner Name</label>
-                        <input type="text" id="ownerName" required placeholder="e.g. John Doe">
-                    </div>
-                    <div class="form-group">
-                        <label for="phone">Phone Number</label>
-                        <input type="tel" id="phone" required placeholder="e.g. +1 234 567 8900">
-                    </div>
-                    <div class="form-group">
-                        <label for="whatsapp">WhatsApp Number</label>
-                        <input type="tel" id="whatsapp" required placeholder="e.g. +1 234 567 8900">
-                    </div>
-                    <div class="form-group">
-                        <label for="address">Business Address</label>
-                        <textarea id="address" required placeholder="e.g. 15 Broad Street" style="width: 100%; padding: 0.625rem; border: 1px solid var(--border-color); border-radius: 0.375rem; font-size: 1rem; font-family: inherit; resize: vertical; min-height: 80px;"></textarea>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="city">City</label>
-                        <input type="text" id="city" required placeholder="e.g. Lagos">
-                    </div>
+                    <div class="form-group"><label for="businessName">Business Name</label><input type="text" id="businessName" required placeholder="e.g. The Italian Bistro"></div>
+                    <div class="form-group"><label for="ownerName">Owner Name</label><input type="text" id="ownerName" required placeholder="e.g. John Doe"></div>
+                    <div class="form-group"><label for="phone">Phone Number</label><input type="tel" id="phone" required placeholder="e.g. +1 234 567 8900"></div>
+                    <div class="form-group"><label for="whatsapp">WhatsApp Number</label><input type="tel" id="whatsapp" required placeholder="e.g. +1 234 567 8900"></div>
+                    <div class="form-group"><label for="address">Business Address</label><textarea id="address" required placeholder="e.g. 15 Broad Street" style="width: 100%; padding: 0.625rem; border: 1px solid var(--border-color); border-radius: 0.375rem; font-size: 1rem; font-family: inherit; resize: vertical; min-height: 80px;"></textarea></div>
+                    <div class="form-group"><label for="city">City</label><input type="text" id="city" required placeholder="e.g. Lagos"></div>
 
                     <div class="form-group">
                         <label for="country">Country</label>
                         <select id="country" required>
-                            <option value="">Select Country</option>
-                            <option value="Algeria">Algeria</option>
-                            <option value="Angola">Angola</option>
-                            <option value="Benin">Benin</option>
-                            <option value="Botswana">Botswana</option>
-                            <option value="Burkina Faso">Burkina Faso</option>
-                            <option value="Burundi">Burundi</option>
-                            <option value="Cabo Verde">Cabo Verde</option>
-                            <option value="Cameroon">Cameroon</option>
-                            <option value="Central African Republic">Central African Republic</option>
-                            <option value="Chad">Chad</option>
-                            <option value="Comoros">Comoros</option>
-                            <option value="Congo (Congo-Brazzaville)">Congo (Congo-Brazzaville)</option>
-                            <option value="Congo (Democratic Republic)">Congo (Democratic Republic)</option>
-                            <option value="Djibouti">Djibouti</option>
-                            <option value="Egypt">Egypt</option>
-                            <option value="Equatorial Guinea">Equatorial Guinea</option>
-                            <option value="Eritrea">Eritrea</option>
-                            <option value="Eswatini">Eswatini</option>
-                            <option value="Ethiopia">Ethiopia</option>
-                            <option value="Gabon">Gabon</option>
-                            <option value="Gambia">Gambia</option>
-                            <option value="Ghana">Ghana</option>
-                            <option value="Guinea">Guinea</option>
-                            <option value="Guinea-Bissau">Guinea-Bissau</option>
-                            <option value="Ivory Coast">Ivory Coast</option>
-                            <option value="Kenya">Kenya</option>
-                            <option value="Lesotho">Lesotho</option>
-                            <option value="Liberia">Liberia</option>
-                            <option value="Libya">Libya</option>
-                            <option value="Madagascar">Madagascar</option>
-                            <option value="Malawi">Malawi</option>
-                            <option value="Mali">Mali</option>
-                            <option value="Mauritania">Mauritania</option>
-                            <option value="Mauritius">Mauritius</option>
-                            <option value="Morocco">Morocco</option>
-                            <option value="Mozambique">Mozambique</option>
-                            <option value="Namibia">Namibia</option>
-                            <option value="Niger">Niger</option>
-                            <option value="Nigeria">Nigeria</option>
-                            <option value="Rwanda">Rwanda</option>
-                            <option value="Sao Tome and Principe">Sao Tome and Principe</option>
-                            <option value="Senegal">Senegal</option>
-                            <option value="Seychelles">Seychelles</option>
-                            <option value="Sierra Leone">Sierra Leone</option>
-                            <option value="Somalia">Somalia</option>
-                            <option value="South Africa">South Africa</option>
-                            <option value="South Sudan">South Sudan</option>
-                            <option value="Sudan">Sudan</option>
-                            <option value="Tanzania">Tanzania</option>
-                            <option value="Togo">Togo</option>
-                            <option value="Tunisia">Tunisia</option>
-                            <option value="Uganda">Uganda</option>
-                            <option value="Zambia">Zambia</option>
-                            <option value="Zimbabwe">Zimbabwe</option>
+                            <option value="">Select Country</option><option value="Algeria">Algeria</option><option value="Angola">Angola</option><option value="Benin">Benin</option><option value="Botswana">Botswana</option><option value="Burkina Faso">Burkina Faso</option><option value="Burundi">Burundi</option><option value="Cabo Verde">Cabo Verde</option><option value="Cameroon">Cameroon</option><option value="Central African Republic">Central African Republic</option><option value="Chad">Chad</option><option value="Comoros">Comoros</option><option value="Congo (Congo-Brazzaville)">Congo (Congo-Brazzaville)</option><option value="Congo (Democratic Republic)">Congo (Democratic Republic)</option><option value="Djibouti">Djibouti</option><option value="Egypt">Egypt</option><option value="Equatorial Guinea">Equatorial Guinea</option><option value="Eritrea">Eritrea</option><option value="Eswatini">Eswatini</option><option value="Ethiopia">Ethiopia</option><option value="Gabon">Gabon</option><option value="Gambia">Gambia</option><option value="Ghana">Ghana</option><option value="Guinea">Guinea</option><option value="Guinea-Bissau">Guinea-Bissau</option><option value="Ivory Coast">Ivory Coast</option><option value="Kenya">Kenya</option><option value="Lesotho">Lesotho</option><option value="Liberia">Liberia</option><option value="Libya">Libya</option><option value="Madagascar">Madagascar</option><option value="Malawi">Malawi</option><option value="Mali">Mali</option><option value="Mauritania">Mauritania</option><option value="Mauritius">Mauritius</option><option value="Morocco">Morocco</option><option value="Mozambique">Mozambique</option><option value="Namibia">Namibia</option><option value="Niger">Niger</option><option value="Nigeria">Nigeria</option><option value="Rwanda">Rwanda</option><option value="Sao Tome and Principe">Sao Tome and Principe</option><option value="Senegal">Senegal</option><option value="Seychelles">Seychelles</option><option value="Sierra Leone">Sierra Leone</option><option value="Somalia">Somalia</option><option value="South Africa">South Africa</option><option value="South Sudan">South Sudan</option><option value="Sudan">Sudan</option><option value="Tanzania">Tanzania</option><option value="Togo">Togo</option><option value="Tunisia">Tunisia</option><option value="Uganda">Uganda</option><option value="Zambia">Zambia</option><option value="Zimbabwe">Zimbabwe</option>
                         </select>
                     </div>
 
                     <div class="form-group">
                         <label for="category">Business Category</label>
-                        <select id="category" required>
-                            <option value="">Select Category</option>
-                            <option value="Restaurant">Restaurant</option>
-                            <option value="Cafe">Cafe</option>
-                            <option value="Bakery">Bakery</option>
-                            <option value="Bar">Bar</option>
-                            <option value="Hotel">Hotel</option>
-                            <option value="Food Truck">Food Truck</option>
-                            <option value="Food Vendor">Food Vendor</option>
-                            <option value="Catering">Catering</option>
-                            <option value="Takeaway">Takeaway</option>
-                        </select>
+                        <select id="category" required><option value="">Select Category</option><option value="Restaurant">Restaurant</option><option value="Cafe">Cafe</option><option value="Bakery">Bakery</option><option value="Bar">Bar</option><option value="Hotel">Hotel</option><option value="Food Truck">Food Truck</option><option value="Food Vendor">Food Vendor</option><option value="Catering">Catering</option><option value="Takeaway">Takeaway</option></select>
                     </div>
 
                     <div class="form-group">
-                        <label for="cuisine">Cuisine Type</label>
-                        <input type="text" id="cuisine" placeholder="e.g. Nigerian, Ethiopian, Fusion">
+                        <label for="cuisine-search">Cuisine Type</label>
+                        <input type="hidden" id="cuisine" name="cuisine">
+                        <div class="cuisine-selector">
+                            <input type="search" id="cuisine-search" class="cuisine-search" placeholder="Search African cuisines..." autocomplete="off">
+                            <div id="cuisine-selected" class="cuisine-selected hidden" aria-live="polite"></div>
+
+                            <div class="cuisine-popular">
+                                <span class="cuisine-section-title">Popular</span>
+                                <div class="cuisine-pill-grid">
+                                    <button type="button" class="cuisine-pill" data-cuisine="Nigerian">Nigerian</button>
+                                    <button type="button" class="cuisine-pill" data-cuisine="Ghanaian">Ghanaian</button>
+                                    <button type="button" class="cuisine-pill" data-cuisine="Ethiopian">Ethiopian</button>
+                                    <button type="button" class="cuisine-pill" data-cuisine="South African">South African</button>
+                                </div>
+                            </div>
+
+                            <details class="cuisine-region"><summary>West Africa</summary><div class="cuisine-pill-grid"><button type="button" class="cuisine-pill" data-cuisine="Senegalese">Senegalese</button><button type="button" class="cuisine-pill" data-cuisine="Ivorian">Ivorian</button><button type="button" class="cuisine-pill" data-cuisine="Gambian">Gambian</button><button type="button" class="cuisine-pill" data-cuisine="Sierra Leonean">Sierra Leonean</button><button type="button" class="cuisine-pill" data-cuisine="Liberian">Liberian</button><button type="button" class="cuisine-pill" data-cuisine="Beninese">Beninese</button><button type="button" class="cuisine-pill" data-cuisine="Togolese">Togolese</button><button type="button" class="cuisine-pill" data-cuisine="Guinean">Guinean</button><button type="button" class="cuisine-pill" data-cuisine="Malian">Malian</button><button type="button" class="cuisine-pill" data-cuisine="Burkinabè">Burkinabè</button></div></details>
+                            <details class="cuisine-region"><summary>East Africa</summary><div class="cuisine-pill-grid"><button type="button" class="cuisine-pill" data-cuisine="Kenyan">Kenyan</button><button type="button" class="cuisine-pill" data-cuisine="Tanzanian">Tanzanian</button><button type="button" class="cuisine-pill" data-cuisine="Ugandan">Ugandan</button><button type="button" class="cuisine-pill" data-cuisine="Rwandan">Rwandan</button><button type="button" class="cuisine-pill" data-cuisine="Burundian">Burundian</button><button type="button" class="cuisine-pill" data-cuisine="Somali">Somali</button><button type="button" class="cuisine-pill" data-cuisine="Eritrean">Eritrean</button><button type="button" class="cuisine-pill" data-cuisine="Djiboutian">Djiboutian</button></div></details>
+                            <details class="cuisine-region"><summary>Central Africa</summary><div class="cuisine-pill-grid"><button type="button" class="cuisine-pill" data-cuisine="Cameroonian">Cameroonian</button><button type="button" class="cuisine-pill" data-cuisine="Congolese">Congolese</button><button type="button" class="cuisine-pill" data-cuisine="Gabonese">Gabonese</button><button type="button" class="cuisine-pill" data-cuisine="Angolan">Angolan</button><button type="button" class="cuisine-pill" data-cuisine="Chadian">Chadian</button><button type="button" class="cuisine-pill" data-cuisine="Central African">Central African</button><button type="button" class="cuisine-pill" data-cuisine="Equatoguinean">Equatoguinean</button></div></details>
+                            <details class="cuisine-region"><summary>North Africa</summary><div class="cuisine-pill-grid"><button type="button" class="cuisine-pill" data-cuisine="Moroccan">Moroccan</button><button type="button" class="cuisine-pill" data-cuisine="Egyptian">Egyptian</button><button type="button" class="cuisine-pill" data-cuisine="Algerian">Algerian</button><button type="button" class="cuisine-pill" data-cuisine="Tunisian">Tunisian</button><button type="button" class="cuisine-pill" data-cuisine="Libyan">Libyan</button><button type="button" class="cuisine-pill" data-cuisine="Sudanese">Sudanese</button><button type="button" class="cuisine-pill" data-cuisine="Mauritanian">Mauritanian</button></div></details>
+                            <details class="cuisine-region"><summary>Southern Africa</summary><div class="cuisine-pill-grid"><button type="button" class="cuisine-pill" data-cuisine="Zimbabwean">Zimbabwean</button><button type="button" class="cuisine-pill" data-cuisine="Zambian">Zambian</button><button type="button" class="cuisine-pill" data-cuisine="Mozambican">Mozambican</button><button type="button" class="cuisine-pill" data-cuisine="Malawian">Malawian</button><button type="button" class="cuisine-pill" data-cuisine="Namibian">Namibian</button><button type="button" class="cuisine-pill" data-cuisine="Botswanan">Botswanan</button><button type="button" class="cuisine-pill" data-cuisine="Eswatini">Eswatini</button><button type="button" class="cuisine-pill" data-cuisine="Basotho">Basotho</button></div></details>
+                            <details class="cuisine-region"><summary>Indian Ocean & Islands</summary><div class="cuisine-pill-grid"><button type="button" class="cuisine-pill" data-cuisine="Malagasy">Malagasy</button><button type="button" class="cuisine-pill" data-cuisine="Mauritian">Mauritian</button><button type="button" class="cuisine-pill" data-cuisine="Seychellois">Seychellois</button><button type="button" class="cuisine-pill" data-cuisine="Comorian">Comorian</button><button type="button" class="cuisine-pill" data-cuisine="Cape Verdean">Cape Verdean</button><button type="button" class="cuisine-pill" data-cuisine="São Toméan">São Toméan</button></div></details>
+
+                            <p id="cuisine-empty" class="cuisine-empty hidden">No listed cuisine matches. Add it as a custom cuisine below.</p>
+                            <div class="cuisine-custom"><input type="text" id="custom-cuisine" placeholder="Add another cuisine, e.g. Afro-fusion"><button type="button" id="add-custom-cuisine" class="btn btn-outline btn-small">Add</button></div>
+                            <p class="cuisine-help">Choose as many as apply. Regional groups stay collapsed until opened or matched by search.</p>
+                        </div>
                     </div>
 
-                    <div class="form-group">
-                        <label for="website">Website (Optional)</label>
-                        <input type="url" id="website" placeholder="https://www.example.com">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="currency-input">Menu Currency *</label>
-                        <input type="text" id="currency-input" list="currency-list" placeholder="Search and select currency..." required>
-                        <datalist id="currency-list"></datalist>
-                        <input type="hidden" id="currency" name="currency">
-                    </div>
-
-                    <button type="submit" id="submit-btn" class="btn btn-primary btn-full">
-                        <span id="btn-text">Save Profile</span>
-                        <div id="btn-loader" class="loader hidden"></div>
-                    </button>
-
+                    <div class="form-group"><label for="website">Website (Optional)</label><input type="url" id="website" placeholder="https://www.example.com"></div>
+                    <div class="form-group"><label for="currency-input">Menu Currency *</label><input type="text" id="currency-input" list="currency-list" placeholder="Search and select currency..." required><datalist id="currency-list"></datalist><input type="hidden" id="currency" name="currency"></div>
+                    <button type="submit" id="submit-btn" class="btn btn-primary btn-full"><span id="btn-text">Save Profile</span><div id="btn-loader" class="loader hidden"></div></button>
                     <a href="dashboard.html" id="cancel-btn" class="btn btn-outline btn-full hidden">Cancel</a>
                 </form>
 
                 <div id="error-message" class="error-box hidden"></div>
-                <div id="success-message" class="success-box hidden" style="background-color: #dcfce7; color: #166534; padding: 0.75rem; border-radius: 0.375rem; font-size: 0.875rem; margin-top: 1rem;">
-                    Profile saved successfully! Redirecting...
-                </div>
+                <div id="success-message" class="success-box hidden" style="background-color: #dcfce7; color: #166534; padding: 0.75rem; border-radius: 0.375rem; font-size: 0.875rem; margin-top: 1rem;">Profile saved successfully! Redirecting...</div>
             </div>
         </div>
     </main>
 
     <script type="module" src="js/restaurant.js"></script>
+    <script type="module" src="js/cuisine-selector.js"></script>
 </body>
 </html>
