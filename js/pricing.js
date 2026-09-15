@@ -5,77 +5,58 @@ import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.14.0/firebase
 const paymentModal = document.getElementById("paypal-modal");
 const paymentModalTitle = document.getElementById("paypal-modal-title");
 const paymentContinueBtn = document.getElementById("paypal-continue-btn");
-const closeModalBtns = [
-    document.getElementById("close-modal"),
-    document.getElementById("close-modal-btn")
-];
+const closeModalBtns = [document.getElementById("close-modal"), document.getElementById("close-modal-btn")];
 const upgradeBtns = document.querySelectorAll(".upgrade-btn");
 
 let userPlan = "preview";
 let selectedPlanLink = "";
 
-// Existing payment links remain in place until the Stripe checkout stage is connected.
-// Keep the internal `pro` plan key for compatibility; the customer-facing name is Premium.
+// Stripe sandbox Payment Links. The internal `pro` plan key is retained for compatibility;
+// customers see the plan name Premium.
 const PAYMENT_LINKS = {
-    standard: "https://www.paypal.com/ncp/payment/PU2EMNU3XNUJN",
-    pro: "https://www.paypal.com/ncp/payment/B3FM4VTP4UPXE"
+    standard: "https://buy.stripe.com/test_bJeaEY2mEc0K3Ic7sP1ck00",
+    pro: "https://buy.stripe.com/test_28EeVef9qfcWguYfZl1ck01"
 };
 
-const displayPlanName = (plan) => plan === "pro" ? "Premium" : plan.charAt(0).toUpperCase() + plan.slice(1);
+const displayPlanName = plan => plan === "pro" ? "Premium" : plan.charAt(0).toUpperCase() + plan.slice(1);
 
-onAuthStateChanged(auth, async (user) => {
-    if (user) {
-        try {
-            const userDocRef = doc(db, "users", user.uid);
-            const userDoc = await getDoc(userDocRef);
-
-            if (userDoc.exists()) {
-                userPlan = userDoc.data().plan || "preview";
-            }
-
-            updateUIForCurrentPlan(userPlan);
-        } catch (error) {
-            console.error("Error fetching user plan:", error);
-            updateUIForCurrentPlan("preview");
-        }
-    } else {
-        updateUIForCurrentPlan(null);
+onAuthStateChanged(auth, async user => {
+    if (!user) return updateUIForCurrentPlan(null);
+    try {
+        const userDoc = await getDoc(doc(db, "users", user.uid));
+        if (userDoc.exists()) userPlan = userDoc.data().plan || "preview";
+        updateUIForCurrentPlan(userPlan);
+    } catch (error) {
+        console.error("Error fetching user plan:", error);
+        updateUIForCurrentPlan("preview");
     }
 });
 
 function updateUIForCurrentPlan(plan) {
+    const weights = { preview: 1, standard: 2, pro: 3 };
     upgradeBtns.forEach(btn => {
-        const btnPlan = btn.getAttribute("data-plan");
-
-        if (plan === btnPlan) {
+        const target = btn.getAttribute("data-plan");
+        if (plan === target) {
             btn.innerText = "Current Plan";
             btn.disabled = true;
             btn.classList.remove("btn-primary", "btn-secondary");
             btn.classList.add("btn-outline");
-
-            const card = document.getElementById(`card-${btnPlan}`);
+            const card = document.getElementById(`card-${target}`);
             if (card) {
                 card.style.borderColor = "var(--primary-color)";
                 card.style.backgroundColor = "rgba(0, 135, 81, 0.02)";
             }
-        } else {
-            const planWeights = { preview: 1, standard: 2, pro: 3 };
-            if (plan && planWeights[btnPlan] < planWeights[plan]) {
-                btn.innerText = "Included";
-                btn.disabled = true;
-                btn.classList.remove("btn-primary", "btn-secondary");
-                btn.classList.add("btn-outline");
-            } else {
-                if (btnPlan === "standard") {
-                    btn.innerText = "Upgrade to Standard";
-                } else if (btnPlan === "pro") {
-                    btn.innerText = "Upgrade to Premium";
-                } else {
-                    btn.innerText = "Upgrade";
-                }
-                btn.disabled = false;
-            }
+            return;
         }
+        if (plan && weights[target] < weights[plan]) {
+            btn.innerText = "Included";
+            btn.disabled = true;
+            btn.classList.remove("btn-primary", "btn-secondary");
+            btn.classList.add("btn-outline");
+            return;
+        }
+        btn.innerText = target === "standard" ? "Upgrade to Standard" : target === "pro" ? "Upgrade to Premium" : "Upgrade";
+        btn.disabled = false;
     });
 }
 
@@ -84,47 +65,25 @@ function handleUpgrade(plan) {
         window.location.href = "login.html?mode=register";
         return;
     }
-
     if (plan === "preview" || !PAYMENT_LINKS[plan]) return;
-
     selectedPlanLink = PAYMENT_LINKS[plan];
-
     if (paymentModal) {
-        if (paymentModalTitle) {
-            paymentModalTitle.innerText = `Upgrade to ${displayPlanName(plan)}?`;
-        }
+        if (paymentModalTitle) paymentModalTitle.innerText = `Upgrade to ${displayPlanName(plan)}?`;
+        const message = document.getElementById("paypal-modal-message");
+        if (message) message.innerText = `Continue to secure Stripe test checkout for the ${displayPlanName(plan)} annual subscription.`;
+        if (paymentContinueBtn) paymentContinueBtn.innerText = "Continue to Stripe";
         paymentModal.classList.remove("hidden");
     } else {
-        window.open(selectedPlanLink, "_blank");
+        window.location.href = selectedPlanLink;
     }
 }
 
-if (paymentContinueBtn) {
-    paymentContinueBtn.addEventListener("click", () => {
-        if (selectedPlanLink) {
-            window.open(selectedPlanLink, "_blank");
-            if (paymentModal) paymentModal.classList.add("hidden");
-        }
-    });
-}
-
-upgradeBtns.forEach(btn => {
-    btn.addEventListener("click", () => {
-        const targetPlan = btn.getAttribute("data-plan");
-        handleUpgrade(targetPlan);
-    });
+paymentContinueBtn?.addEventListener("click", () => {
+    if (selectedPlanLink) window.location.href = selectedPlanLink;
 });
 
-closeModalBtns.forEach(btn => {
-    if (btn) {
-        btn.addEventListener("click", () => {
-            if (paymentModal) paymentModal.classList.add("hidden");
-        });
-    }
-});
-
-window.addEventListener("click", (e) => {
-    if (e.target === paymentModal) {
-        paymentModal.classList.add("hidden");
-    }
+upgradeBtns.forEach(btn => btn.addEventListener("click", () => handleUpgrade(btn.getAttribute("data-plan"))));
+closeModalBtns.forEach(btn => btn?.addEventListener("click", () => paymentModal?.classList.add("hidden")));
+window.addEventListener("click", event => {
+    if (event.target === paymentModal) paymentModal.classList.add("hidden");
 });
