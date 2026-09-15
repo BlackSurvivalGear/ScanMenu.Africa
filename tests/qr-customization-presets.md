@@ -1,1 +1,0 @@
-Presets: Classic = black on white. Brand Gold = gold foreground with logo when enabled. Premium Branded = gold foreground, white background, printable gold frame, business name, menu call-to-action, and ScanMenu.Africa footer.
