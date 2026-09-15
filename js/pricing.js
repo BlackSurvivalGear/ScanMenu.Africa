@@ -2,9 +2,9 @@ import { auth, db } from "./auth.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js";
 import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
 
-const paypalModal = document.getElementById("paypal-modal");
-const paypalModalTitle = document.getElementById("paypal-modal-title");
-const paypalContinueBtn = document.getElementById("paypal-continue-btn");
+const paymentModal = document.getElementById("paypal-modal");
+const paymentModalTitle = document.getElementById("paypal-modal-title");
+const paymentContinueBtn = document.getElementById("paypal-continue-btn");
 const closeModalBtns = [
     document.getElementById("close-modal"),
     document.getElementById("close-modal-btn")
@@ -14,10 +14,14 @@ const upgradeBtns = document.querySelectorAll(".upgrade-btn");
 let userPlan = "preview";
 let selectedPlanLink = "";
 
-const PAYPAL_LINKS = {
+// Existing payment links remain in place until the Stripe checkout stage is connected.
+// Keep the internal `pro` plan key for compatibility; the customer-facing name is Premium.
+const PAYMENT_LINKS = {
     standard: "https://www.paypal.com/ncp/payment/PU2EMNU3XNUJN",
     pro: "https://www.paypal.com/ncp/payment/B3FM4VTP4UPXE"
 };
+
+const displayPlanName = (plan) => plan === "pro" ? "Premium" : plan.charAt(0).toUpperCase() + plan.slice(1);
 
 onAuthStateChanged(auth, async (user) => {
     if (user) {
@@ -35,7 +39,6 @@ onAuthStateChanged(auth, async (user) => {
             updateUIForCurrentPlan("preview");
         }
     } else {
-        // User not logged in, they can see the plans but clicking upgrade will prompt login
         updateUIForCurrentPlan(null);
     }
 });
@@ -50,16 +53,13 @@ function updateUIForCurrentPlan(plan) {
             btn.classList.remove("btn-primary", "btn-secondary");
             btn.classList.add("btn-outline");
 
-            // Highlight current plan card
             const card = document.getElementById(`card-${btnPlan}`);
             if (card) {
                 card.style.borderColor = "var(--primary-color)";
                 card.style.backgroundColor = "rgba(0, 135, 81, 0.02)";
             }
         } else {
-            // If user is on a higher plan, show "Current Plan" (implicitly, but here we just handle upgrade)
-            // or if they are on "standard" and looking at "preview", maybe still disabled
-            const planWeights = { "preview": 1, "standard": 2, "pro": 3 };
+            const planWeights = { preview: 1, standard: 2, pro: 3 };
             if (plan && planWeights[btnPlan] < planWeights[plan]) {
                 btn.innerText = "Included";
                 btn.disabled = true;
@@ -69,7 +69,7 @@ function updateUIForCurrentPlan(plan) {
                 if (btnPlan === "standard") {
                     btn.innerText = "Upgrade to Standard";
                 } else if (btnPlan === "pro") {
-                    btn.innerText = "Upgrade to Pro";
+                    btn.innerText = "Upgrade to Premium";
                 } else {
                     btn.innerText = "Upgrade";
                 }
@@ -85,25 +85,25 @@ function handleUpgrade(plan) {
         return;
     }
 
-    if (plan === "preview" || !PAYPAL_LINKS[plan]) return;
+    if (plan === "preview" || !PAYMENT_LINKS[plan]) return;
 
-    selectedPlanLink = PAYPAL_LINKS[plan];
+    selectedPlanLink = PAYMENT_LINKS[plan];
 
-    if (paypalModal) {
-        if (paypalModalTitle) {
-            paypalModalTitle.innerText = `Upgrade to ${plan.charAt(0).toUpperCase() + plan.slice(1)}?`;
+    if (paymentModal) {
+        if (paymentModalTitle) {
+            paymentModalTitle.innerText = `Upgrade to ${displayPlanName(plan)}?`;
         }
-        paypalModal.classList.remove("hidden");
+        paymentModal.classList.remove("hidden");
     } else {
         window.open(selectedPlanLink, "_blank");
     }
 }
 
-if (paypalContinueBtn) {
-    paypalContinueBtn.addEventListener("click", () => {
+if (paymentContinueBtn) {
+    paymentContinueBtn.addEventListener("click", () => {
         if (selectedPlanLink) {
             window.open(selectedPlanLink, "_blank");
-            if (paypalModal) paypalModal.classList.add("hidden");
+            if (paymentModal) paymentModal.classList.add("hidden");
         }
     });
 }
@@ -118,14 +118,13 @@ upgradeBtns.forEach(btn => {
 closeModalBtns.forEach(btn => {
     if (btn) {
         btn.addEventListener("click", () => {
-            if (paypalModal) paypalModal.classList.add("hidden");
+            if (paymentModal) paymentModal.classList.add("hidden");
         });
     }
 });
 
-// Close modal when clicking outside
 window.addEventListener("click", (e) => {
-    if (e.target === paypalModal) {
-        paypalModal.classList.add("hidden");
+    if (e.target === paymentModal) {
+        paymentModal.classList.add("hidden");
     }
 });
