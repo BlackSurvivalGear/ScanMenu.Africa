@@ -1,1 +1,0 @@
-QR generation blocks foreground/background combinations below a 4.5 contrast ratio to reduce unscannable custom QR codes. Users may select any higher-contrast colours.
