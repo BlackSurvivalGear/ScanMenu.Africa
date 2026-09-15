@@ -1,1 +1,0 @@
-Browser verification required before merge: generate and scan Classic, Brand Gold, Premium Branded, custom high-contrast colours, logo-off output, reset defaults, and downloaded PNGs on desktop/mobile.
