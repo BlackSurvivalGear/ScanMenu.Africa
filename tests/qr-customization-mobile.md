@@ -1,0 +1,1 @@
+Manual mobile check: controls should stack within the existing QR panel width; native colour inputs remain usable; generated preview must remain contained by the responsive card.
