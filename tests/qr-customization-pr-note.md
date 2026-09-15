@@ -1,0 +1,1 @@
+Automated checks are supplemented by tests/qr-customization-manual.md for visual/scanning verification.
