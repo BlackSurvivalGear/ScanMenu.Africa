@@ -1,0 +1,24 @@
+name: Stripe subscriptions check
+on:
+  pull_request:
+  push:
+    branches: [main]
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: JavaScript syntax
+        run: |
+          node --check functions/index.js
+          node --check js/pricing.js
+          node --check js/billing.js
+          node --check js/dashboard-billing.js
+          node --check js/menu-items.js
+          node --check js/admin-subscriptions.js
+          node --check js/public-entitlements.js
+      - name: Subscription regression checks
+        run: node tests/stripe-subscription-check.mjs
