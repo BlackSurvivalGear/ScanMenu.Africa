@@ -1,0 +1,1 @@
+Customization controls are injected into the existing QR Code panel before the preview: QR Style, QR Colour, Background, Use Business Logo, contrast warning, and Reset to Default.
