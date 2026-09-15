@@ -6,6 +6,7 @@ import {
     signInWithEmailAndPassword,
     signOut,
     sendEmailVerification,
+    reload,
     GoogleAuthProvider,
     signInWithPopup
 } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js";
@@ -39,7 +40,8 @@ let isRegisterMode = false;
 let isRedirectingAfterAuth = false;
 
 const urlParams = new URLSearchParams(window.location.search);
-if (urlParams.get('mode') === 'register') setAuthMode(true);
+const returnedFromVerification = urlParams.get("verified") === "1";
+if (urlParams.get("mode") === "register") setAuthMode(true);
 
 function setAuthMode(isRegister) {
     isRegisterMode = isRegister;
@@ -86,8 +88,8 @@ function getFriendlyErrorMessage(errorCode) {
         case "auth/weak-password": return "Password must be at least 6 characters long.";
         case "auth/network-request-failed": return "Network error. Please check your connection.";
         case "auth/invalid-credential": return "Invalid email or password.";
-        case "auth/popup-closed-by-user": return "Google sign-in was cancelled.";
-        case "auth/popup-blocked": return "Your browser blocked the Google sign-in window. Please allow pop-ups and try again.";
+        case "auth/popup-closed-by-user": return "Gmail sign-in was cancelled.";
+        case "auth/popup-blocked": return "Your browser blocked the Gmail sign-in window. Please allow pop-ups and try again.";
         case "auth/operation-not-allowed": return "This sign-in method is not enabled yet.";
         default: return "An unexpected error occurred. Please try again.";
     }
@@ -110,6 +112,12 @@ function showError(message) {
     if (!errorMessage) return;
     errorMessage.innerText = message;
     errorMessage.classList.remove("hidden");
+}
+
+function showVerificationMessage(title, message) {
+    if (!verificationMessage) return;
+    verificationMessage.innerHTML = `<strong>${title}</strong><p>${message}</p>`;
+    verificationMessage.classList.remove("hidden");
 }
 
 async function redirectAfterAuth(user) {
@@ -136,17 +144,16 @@ if (authForm) {
                 const user = userCredential.user;
                 await ensureUserDocument(user);
                 await sendEmailVerification(user, {
-                    url: `${window.location.origin}${window.location.pathname}`,
+                    url: `${window.location.origin}${window.location.pathname}?verified=1`,
                     handleCodeInApp: false
                 });
-                await signOut(auth);
-                verificationMessage?.classList.remove("hidden");
                 setAuthMode(false);
+                showVerificationMessage("Check your email", "We sent you a verification link. Keep this browser signed in and open the link to continue automatically.");
             } else {
                 const userCredential = await signInWithEmailAndPassword(auth, email, password);
                 const user = userCredential.user;
+                await reload(user);
                 if (!user.emailVerified) {
-                    await signOut(auth);
                     showError("Please verify your email address before signing in. Check your inbox for the verification email.");
                     return;
                 }
@@ -171,7 +178,7 @@ googleSignInBtn?.addEventListener("click", async () => {
         const result = await signInWithPopup(auth, googleProvider);
         await redirectAfterAuth(result.user);
     } catch (error) {
-        console.error("Google Auth Error:", error);
+        console.error("Gmail Auth Error:", error);
         showError(getFriendlyErrorMessage(error.code));
     } finally {
         googleSignInBtn.disabled = false;
@@ -253,9 +260,19 @@ onAuthStateChanged(auth, async (user) => {
 
     if (user) {
         const usesPassword = user.providerData.some(provider => provider.providerId === "password");
+        if (usesPassword) {
+            try {
+                await reload(user);
+            } catch (error) {
+                console.error("Error refreshing verification status:", error);
+            }
+        }
+
         if (usesPassword && !user.emailVerified) {
+            if (returnedFromVerification && currentPage === "login.html") {
+                showVerificationMessage("Verification pending", "Your verification is still being confirmed. Refresh this page in a moment if you are not redirected automatically.");
+            }
             if (["dashboard.html", "restaurant.html", "admin.html"].includes(currentPage)) {
-                await signOut(auth);
                 window.location.href = "login.html?verify=required";
             }
             return;
@@ -273,11 +290,14 @@ onAuthStateChanged(auth, async (user) => {
             if (!profileExists && !isAdmin && !isModerator) window.location.href = "restaurant.html";
         } else if (currentPage === "restaurant.html") {
             const params = new URLSearchParams(window.location.search);
-            const isEditMode = params.get('edit') === 'true';
+            const isEditMode = params.get("edit") === "true";
             if (profileExists && !isEditMode && !isAdmin && !isModerator) window.location.href = "dashboard.html";
         } else if (currentPage === "admin.html" && !isAdmin && !isModerator) {
             window.location.href = "dashboard.html";
         }
+    } else if (returnedFromVerification && currentPage === "login.html") {
+        setAuthMode(false);
+        showVerificationMessage("Email confirmed", "Your email has been confirmed. Sign in to continue to your account.");
     } else if (["dashboard.html", "restaurant.html", "admin.html"].includes(currentPage)) {
         window.location.href = "login.html";
     }
