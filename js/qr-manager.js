@@ -22,6 +22,7 @@ export function initQRManager(uid, businessName, logoUrl = "") {
     currentLogoUrl = logoUrl || "";
     publicMenuUrl = `${window.location.protocol}//${window.location.host}/menu.html?id=${uid}`;
     renderBusinessBranding();
+    placeMenuActions();
 
     if (!listenersBound) {
         generateBtn?.addEventListener("click", handleGenerateQR);
@@ -38,11 +39,12 @@ function renderBusinessBranding() {
     const headingText = profile.querySelector("h3 span") || profile.querySelector("h3");
     if (headingText) headingText.textContent = "Business Profile";
 
+    // Keep the Business Name value consistent with the other profile values.
     const bizName = document.getElementById("biz-name");
     if (bizName) {
-        bizName.style.fontSize = "1.35rem";
-        bizName.style.fontWeight = "800";
-        bizName.style.color = "var(--text-color)";
+        bizName.style.fontSize = "";
+        bizName.style.fontWeight = "";
+        bizName.style.color = "";
     }
 
     let brand = document.getElementById("business-profile-brand");
@@ -65,6 +67,29 @@ function renderBusinessBranding() {
     name.textContent = currentBizName;
     name.style.cssText = "font-size:1.6rem;font-weight:800;line-height:1.15;color:var(--text-color)";
     brand.appendChild(name);
+}
+
+function placeMenuActions() {
+    const menuSection = document.getElementById("menu-builder-section");
+    const menuHeader = menuSection?.querySelector(":scope > div");
+    const addMenuItemBtn = document.getElementById("add-menu-item-btn");
+    if (!menuHeader || !addMenuItemBtn || !openMenuBtn || !copyLinkBtn) return;
+
+    let actions = document.getElementById("menu-builder-actions");
+    if (!actions) {
+        actions = document.createElement("div");
+        actions.id = "menu-builder-actions";
+        actions.style.cssText = "display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;justify-content:flex-end";
+        menuHeader.appendChild(actions);
+    }
+
+    openMenuBtn.textContent = "Open Menu";
+    copyLinkBtn.textContent = "Copy Menu Link";
+    openMenuBtn.style.flex = "none";
+    copyLinkBtn.style.flex = "none";
+    actions.appendChild(openMenuBtn);
+    actions.appendChild(copyLinkBtn);
+    actions.appendChild(addMenuItemBtn);
 }
 
 async function handleGenerateQR() {
@@ -98,20 +123,12 @@ async function handleGenerateQR() {
         qrPreviewContainer.style.padding = "1.5rem 1rem";
         qrPreviewContainer.style.height = "auto";
         qrPreviewContainer.style.minHeight = "420px";
-        qrPreviewContainer.appendChild(canvas);
 
         const bizNameLabel = document.createElement("div");
         bizNameLabel.textContent = currentBizName;
         bizNameLabel.style.cssText = "font-size:1.4rem;font-weight:800;color:var(--text-color);text-align:center";
         qrPreviewContainer.appendChild(bizNameLabel);
-
-        const menuLink = document.createElement("a");
-        menuLink.href = publicMenuUrl;
-        menuLink.target = "_blank";
-        menuLink.rel = "noopener";
-        menuLink.textContent = "Open Business Menu";
-        menuLink.style.cssText = "font-size:1rem;color:var(--primary-color);text-decoration:none;font-weight:600";
-        qrPreviewContainer.appendChild(menuLink);
+        qrPreviewContainer.appendChild(canvas);
 
         qrDownloadActions?.classList.remove("hidden");
         if (qrDownloadActions) {
