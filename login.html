@@ -13,9 +13,6 @@
                 <img src="favi.png" alt="ScanMenu.Africa" class="logo-icon">
                 <span>ScanMenu.Africa</span>
             </a>
-            <div class="nav-links">
-                <a href="melanin-map.html" class="btn btn-outline btn-small">Melanin Map</a>
-            </div>
         </nav>
     </header>
 
@@ -23,6 +20,9 @@
         <div class="auth-card">
             <h2 id="auth-title">Sign In</h2>
             <p id="auth-subtitle">Welcome back! Please enter your details.</p>
+
+            <button type="button" id="google-signin-btn" class="btn btn-outline btn-full">Continue with Google</button>
+            <p style="text-align:center; margin: 1rem 0; opacity:.7;">or</p>
 
             <form id="auth-form">
                 <div class="form-group">
@@ -41,6 +41,10 @@
             </form>
 
             <div id="error-message" class="error-box hidden"></div>
+            <div id="verification-message" class="hidden" style="margin-top:1rem; padding:1rem; border:1px solid #d4af37; border-radius:8px;">
+                <strong>Check your email</strong>
+                <p style="margin:.5rem 0 0;">We sent you a verification link. Verify your email address, then return here and sign in.</p>
+            </div>
 
             <div class="auth-switch">
                 <p id="switch-text">Don't have an account? <a href="#" id="toggle-auth">Create Account</a></p>
