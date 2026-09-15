@@ -1,1 +1,0 @@
-Final manual verification is required in the deployed browser before declaring the visual QR styles verified.
