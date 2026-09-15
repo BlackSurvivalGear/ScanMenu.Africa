@@ -1,89 +1,93 @@
-import { auth, db } from "./auth.js";
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js";
-import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
+import { auth, db } from './auth.js';
+import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js';
+import { doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js';
+import { startCheckout, planDisplayName } from './billing.js';
 
-const paymentModal = document.getElementById("paypal-modal");
-const paymentModalTitle = document.getElementById("paypal-modal-title");
-const paymentContinueBtn = document.getElementById("paypal-continue-btn");
-const closeModalBtns = [document.getElementById("close-modal"), document.getElementById("close-modal-btn")];
-const upgradeBtns = document.querySelectorAll(".upgrade-btn");
-
-let userPlan = "preview";
-let selectedPlanLink = "";
-
-// Stripe sandbox Payment Links. The internal `pro` plan key is retained for compatibility;
-// customers see the plan name Premium.
-const PAYMENT_LINKS = {
-    standard: "https://buy.stripe.com/test_bJeaEY2mEc0K3Ic7sP1ck00",
-    pro: "https://buy.stripe.com/test_28EeVef9qfcWguYfZl1ck01"
-};
-
-const displayPlanName = plan => plan === "pro" ? "Premium" : plan.charAt(0).toUpperCase() + plan.slice(1);
+const upgradeBtns = document.querySelectorAll('.upgrade-btn');
+const checkoutModal = document.getElementById('checkout-modal');
+const checkoutModalTitle = document.getElementById('checkout-modal-title');
+const checkoutModalMessage = document.getElementById('checkout-modal-message');
+const checkoutContinueBtn = document.getElementById('checkout-continue-btn');
+const closeModalBtns = [document.getElementById('close-modal'), document.getElementById('close-modal-btn')];
+let selectedPlan = null;
 
 onAuthStateChanged(auth, async user => {
-    if (!user) return updateUIForCurrentPlan(null);
-    try {
-        const userDoc = await getDoc(doc(db, "users", user.uid));
-        if (userDoc.exists()) userPlan = userDoc.data().plan || "preview";
-        updateUIForCurrentPlan(userPlan);
-    } catch (error) {
-        console.error("Error fetching user plan:", error);
-        updateUIForCurrentPlan("preview");
+    let plan = null;
+    if (user) {
+        try {
+            const snap = await getDoc(doc(db, 'users', user.uid));
+            plan = snap.exists() ? (snap.data().plan || 'preview') : 'preview';
+        } catch (error) {
+            console.error('Unable to load current plan', error);
+            plan = 'preview';
+        }
     }
+    updateUIForCurrentPlan(plan);
 });
 
 function updateUIForCurrentPlan(plan) {
     const weights = { preview: 1, standard: 2, pro: 3 };
     upgradeBtns.forEach(btn => {
-        const target = btn.getAttribute("data-plan");
+        const target = btn.dataset.plan;
+        const card = document.getElementById(`card-${target}`);
+        card?.classList.remove('current-plan-card');
         if (plan === target) {
-            btn.innerText = "Current Plan";
+            btn.textContent = 'Current Plan';
             btn.disabled = true;
-            btn.classList.remove("btn-primary", "btn-secondary");
-            btn.classList.add("btn-outline");
-            const card = document.getElementById(`card-${target}`);
-            if (card) {
-                card.style.borderColor = "var(--primary-color)";
-                card.style.backgroundColor = "rgba(0, 135, 81, 0.02)";
-            }
-            return;
-        }
-        if (plan && weights[target] < weights[plan]) {
-            btn.innerText = "Included";
+            card?.classList.add('current-plan-card');
+        } else if (plan && weights[target] < weights[plan]) {
+            btn.textContent = 'Included';
             btn.disabled = true;
-            btn.classList.remove("btn-primary", "btn-secondary");
-            btn.classList.add("btn-outline");
-            return;
+        } else {
+            btn.textContent = target === 'standard' ? 'Upgrade to Standard' : target === 'pro' ? 'Upgrade to Premium' : 'Preview';
+            btn.disabled = target === 'preview';
         }
-        btn.innerText = target === "standard" ? "Upgrade to Standard" : target === "pro" ? "Upgrade to Premium" : "Upgrade";
-        btn.disabled = false;
     });
 }
 
-function handleUpgrade(plan) {
+function openCheckoutDialog(plan) {
     if (!auth.currentUser) {
-        window.location.href = "login.html?mode=register";
+        window.location.href = 'login.html?mode=register';
         return;
     }
-    if (plan === "preview" || !PAYMENT_LINKS[plan]) return;
-    selectedPlanLink = PAYMENT_LINKS[plan];
-    if (paymentModal) {
-        if (paymentModalTitle) paymentModalTitle.innerText = `Upgrade to ${displayPlanName(plan)}?`;
-        const message = document.getElementById("paypal-modal-message");
-        if (message) message.innerText = `Continue to secure Stripe test checkout for the ${displayPlanName(plan)} annual subscription.`;
-        if (paymentContinueBtn) paymentContinueBtn.innerText = "Continue to Stripe";
-        paymentModal.classList.remove("hidden");
-    } else {
-        window.location.href = selectedPlanLink;
-    }
+    selectedPlan = plan;
+    if (!checkoutModal) return startCheckout(plan).catch(showBillingError);
+    checkoutModalTitle.textContent = `Upgrade to ${planDisplayName(plan)}?`;
+    checkoutModalMessage.textContent = `Continue to secure Stripe Checkout for the ${planDisplayName(plan)} annual subscription. Your plan changes only after Stripe confirms payment.`;
+    checkoutModal.classList.remove('hidden');
 }
 
-paymentContinueBtn?.addEventListener("click", () => {
-    if (selectedPlanLink) window.location.href = selectedPlanLink;
-});
+function showBillingError(error) {
+    console.error(error);
+    alert(error.message || 'Unable to start Stripe Checkout.');
+}
 
-upgradeBtns.forEach(btn => btn.addEventListener("click", () => handleUpgrade(btn.getAttribute("data-plan"))));
-closeModalBtns.forEach(btn => btn?.addEventListener("click", () => paymentModal?.classList.add("hidden")));
-window.addEventListener("click", event => {
-    if (event.target === paymentModal) paymentModal.classList.add("hidden");
+upgradeBtns.forEach(btn => btn.addEventListener('click', () => openCheckoutDialog(btn.dataset.plan)));
+checkoutContinueBtn?.addEventListener('click', async () => {
+    if (!selectedPlan) return;
+    checkoutContinueBtn.disabled = true;
+    checkoutContinueBtn.textContent = 'Opening Stripe…';
+    try { await startCheckout(selectedPlan); }
+    catch (error) {
+        checkoutContinueBtn.disabled = false;
+        checkoutContinueBtn.textContent = 'Continue to Stripe';
+        showBillingError(error);
+    }
 });
+closeModalBtns.forEach(btn => btn?.addEventListener('click', () => checkoutModal?.classList.add('hidden')));
+window.addEventListener('click', event => { if (event.target === checkoutModal) checkoutModal.classList.add('hidden'); });
+
+const params = new URLSearchParams(window.location.search);
+if (params.get('checkout') === 'success') {
+    const notice = document.getElementById('checkout-status');
+    if (notice) {
+        notice.textContent = 'Payment received. Stripe is confirming your subscription; your plan will update from the verified webhook.';
+        notice.classList.remove('hidden');
+    }
+} else if (params.get('checkout') === 'cancelled') {
+    const notice = document.getElementById('checkout-status');
+    if (notice) {
+        notice.textContent = 'Checkout cancelled. Your current plan has not changed.';
+        notice.classList.remove('hidden');
+    }
+}
