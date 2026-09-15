@@ -4,58 +4,52 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login / Register - ScanMenu.Africa</title>
+    <link rel="icon" type="image/png" href="favi.png">
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/auth.css">
 </head>
-<body class="bg-light">
-    <header>
-        <nav class="container">
-            <a href="index.html" class="logo">
-                <img src="favi.png" alt="ScanMenu.Africa" class="logo-icon">
-                <span>ScanMenu.Africa</span>
-            </a>
+<body class="bg-light auth-page">
+    <header class="auth-header">
+        <nav class="container auth-nav">
+            <a href="index.html" class="logo auth-brand"><img src="favi.png" alt="ScanMenu.Africa" class="logo-icon auth-brand-icon"><span>ScanMenu.Africa</span></a>
+            <a href="index.html" class="btn btn-outline auth-home-link">← Back to Home</a>
         </nav>
     </header>
-
-    <div class="auth-container">
-        <div class="auth-card">
-            <h2 id="auth-title">Sign In</h2>
-            <p id="auth-subtitle">Welcome back! Please enter your details.</p>
-
-            <button type="button" id="google-signin-btn" class="btn btn-outline btn-full">Continue with Google</button>
-            <p style="text-align:center; margin: 1rem 0; opacity:.7;">or</p>
-
-            <form id="auth-form">
-                <div class="form-group">
-                    <label for="email">Email Address</label>
-                    <input type="email" id="email" required placeholder="example@domain.com">
+    <main class="auth-shell">
+        <section class="auth-intro" aria-label="About ScanMenu.Africa">
+            <div class="auth-intro-inner">
+                <img src="favi.png" alt="" class="auth-hero-mark">
+                <p class="auth-eyebrow">African menus. Built for modern business.</p>
+                <h1>Good food brings people together.</h1>
+                <p class="auth-lead">Create, share and manage beautiful QR-powered digital menus for restaurants, cafés and food businesses.</p>
+                <div class="auth-benefits">
+                    <div class="auth-benefit"><span class="auth-benefit-icon">QR</span><div><strong>QR Menus</strong><small>Easy setup and instant customer access.</small></div></div>
+                    <div class="auth-benefit"><span class="auth-benefit-icon">☰</span><div><strong>Beautiful Menus</strong><small>Showcase your food clearly on any device.</small></div></div>
+                    <div class="auth-benefit"><span class="auth-benefit-icon">↗</span><div><strong>Grow Your Business</strong><small>Keep your menu current and easier to discover.</small></div></div>
                 </div>
-                <div class="form-group">
-                    <label for="password">Password</label>
-                    <input type="password" id="password" required placeholder="••••••••">
-                    <small id="password-hint" class="hidden">Password must be at least 6 characters long.</small>
-                </div>
-                <button type="submit" id="auth-submit-btn" class="btn btn-primary btn-full">
-                    <span id="btn-text">Sign In</span>
-                    <div id="btn-loader" class="loader hidden"></div>
-                </button>
-            </form>
-
-            <div id="error-message" class="error-box hidden"></div>
-            <div id="verification-message" class="hidden" style="margin-top:1rem; padding:1rem; border:1px solid #d4af37; border-radius:8px;">
-                <strong>Check your email</strong>
-                <p style="margin:.5rem 0 0;">We sent you a verification link. Verify your email address, then return here and sign in.</p>
+                <p class="auth-tagline">African Menus · African Food · African People</p>
             </div>
-
-            <div class="auth-switch">
-                <p id="switch-text">Don't have an account? <a href="#" id="toggle-auth">Create Account</a></p>
+        </section>
+        <section class="auth-panel">
+            <div class="auth-card auth-card-enhanced">
+                <div class="auth-card-brand"><img src="favi.png" alt="ScanMenu.Africa logo"><span>ScanMenu.Africa</span></div>
+                <h2 id="auth-title">Sign In</h2>
+                <p id="auth-subtitle">Welcome back! Please enter your details.</p>
+                <button type="button" id="google-signin-btn" class="btn btn-outline btn-full google-auth-btn"><span class="google-g" aria-hidden="true">G</span> Continue with Google</button>
+                <div class="auth-divider"><span>or</span></div>
+                <form id="auth-form">
+                    <div class="form-group"><label for="email">Email Address</label><input type="email" id="email" autocomplete="email" required placeholder="you@example.com"></div>
+                    <div class="form-group"><label for="password">Password</label><input type="password" id="password" autocomplete="current-password" required placeholder="Enter your password"><small id="password-hint" class="hidden">Password must be at least 6 characters long.</small></div>
+                    <button type="submit" id="auth-submit-btn" class="btn btn-primary btn-full auth-submit"><span id="btn-text">Sign In</span><div id="btn-loader" class="loader hidden"></div></button>
+                </form>
+                <div id="error-message" class="error-box hidden"></div>
+                <div id="verification-message" class="verification-box hidden"><strong>Check your email</strong><p>We sent you a verification link. Verify your email address, then return here and sign in.</p></div>
+                <div class="auth-switch"><p id="switch-text">Don't have an account? <a href="#" id="toggle-auth">Create Account</a></p></div>
+                <div class="auth-trust" aria-label="Account benefits"><span>Secure sign-in</span><span>Business focused</span><span>Mobile ready</span></div>
             </div>
-
-            <div class="back-home">
-                <a href="index.html">← Back to Home</a>
-            </div>
-        </div>
-    </div>
-
+        </section>
+    </main>
+    <footer class="auth-footer"><div class="container">© 2026 ScanMenu.Africa · African Menus · African Food · African People</div></footer>
     <script type="module" src="js/auth.js"></script>
 </body>
 </html>
