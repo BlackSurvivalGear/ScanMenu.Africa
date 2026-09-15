@@ -1,91 +1,73 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Role-based helper functions
-    function isAdmin() {
-      return request.auth != null &&
-             exists(/databases/$(database)/documents/admins/$(request.auth.uid));
-    }
+    function isAdmin() { return request.auth != null && exists(/databases/$(database)/documents/admins/$(request.auth.uid)); }
+    function isModerator() { return request.auth != null && (exists(/databases/$(database)/documents/moderators/$(request.auth.uid)) || isAdmin()); }
+    function userPlan(uid) { return get(/databases/$(database)/documents/users/$(uid)).data.plan; }
+    function isPaid(uid) { return userPlan(uid) == 'standard' || userPlan(uid) == 'pro'; }
+    function isPremium(uid) { return userPlan(uid) == 'pro'; }
 
-    function isModerator() {
-      return request.auth != null &&
-             (exists(/databases/$(database)/documents/moderators/$(request.auth.uid)) || isAdmin());
-    }
-
-    // Admin collection rules
     match /admins/{adminId} {
       allow read: if request.auth != null && (request.auth.uid == adminId || isAdmin());
       allow write: if false;
     }
-
-    // Moderator collection rules
     match /moderators/{moderatorId} {
       allow read: if request.auth != null && (request.auth.uid == moderatorId || isAdmin());
       allow write: if isAdmin();
     }
 
-    // User profile rules
     match /users/{userId} {
       allow read: if (request.auth != null && request.auth.uid == userId) || isModerator();
-
-      allow create: if request.auth != null && request.auth.uid == userId;
-
+      allow create: if request.auth != null && request.auth.uid == userId
+                    && (!request.resource.data.keys().hasAny(['plan']) || request.resource.data.plan == 'preview')
+                    && !request.resource.data.keys().hasAny(['stripeCustomerId','stripeSubscriptionId','subscriptionStatus']);
       allow update: if (request.auth != null && request.auth.uid == userId &&
-                        !request.resource.data.diff(resource.data).affectedKeys().hasAny(['plan', 'subscriptionActivatedAt', 'activatedBy', 'subscriptionExpiry']))
-                    || (isAdmin() &&
-                        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['plan', 'subscriptionActivatedAt', 'activatedBy', 'subscriptionExpiry']));
-
+                        !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+                          'plan','subscriptionActivatedAt','activatedBy','subscriptionExpiry','stripeCustomerId','stripeSubscriptionId',
+                          'subscriptionStatus','cancelAtPeriodEnd','subscriptionCurrentPeriodEnd','subscriptionUpdatedAt','subscriptionCancelledAt',
+                          'lastInvoiceStatus','lastInvoiceAt'
+                        ]))
+                    || (isAdmin() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['plan','subscriptionActivatedAt','activatedBy','subscriptionExpiry']));
       allow delete: if isAdmin();
     }
 
-    // Business profile rules (replaces restaurants)
     match /businesses/{uid} {
-      // Allow public read access for the map and menu display
       allow read: if true;
-
-      // Allow create if the user is authenticated and matches UID
-      allow create: if request.auth != null && request.auth.uid == uid;
-
-      // Allow update if owner OR moderator/admin
-      allow update: if (request.auth != null && request.auth.uid == uid &&
-                        !request.resource.data.diff(resource.data).affectedKeys().hasAny(['approved', 'featured']))
-                    || (isModerator() &&
-                        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['approved', 'featured']));
-
-      // Allow delete if admin
+      allow create: if request.auth != null && request.auth.uid == uid
+                    && (!request.resource.data.keys().hasAny(['billingPlan']) || request.resource.data.billingPlan == 'preview')
+                    && (!request.resource.data.keys().hasAny(['logoUrl']) || request.resource.data.logoUrl == '' || isPaid(uid))
+                    && (!request.resource.data.keys().hasAny(['customOrderUrl']) || request.resource.data.customOrderUrl == '' || isPremium(uid));
+      allow update: if (request.auth != null && request.auth.uid == uid
+                        && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['approved','featured','billingPlan','subscriptionStatus'])
+                        && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['logoUrl']) || isPaid(uid))
+                        && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['customOrderUrl']) || isPremium(uid)))
+                    || (isModerator() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['approved','featured']));
       allow delete: if isAdmin();
     }
 
-    // Legacy Restaurant profile rules (kept for backward compatibility during migration)
     match /restaurants/{uid} {
       allow read: if true;
       allow create, update: if request.auth != null && request.auth.uid == uid;
       allow delete: if isAdmin();
     }
 
-    // Menu Category rules
     match /menuCategories/{categoryId} {
-      allow create: if request.auth != null && request.resource.data.restaurantId == request.auth.uid;
-      allow read: if (request.auth != null && resource.data.restaurantId == request.auth.uid) || isModerator();
-      allow update: if request.auth != null && resource.data.restaurantId == request.auth.uid;
-      allow delete: if (request.auth != null && resource.data.restaurantId == request.auth.uid) || isModerator();
+      allow create, update: if false;
+      allow read: if true;
+      allow delete: if isModerator();
     }
 
-    // Menu Item rules
     match /menuItems/{itemId} {
       allow read: if true;
-      allow create: if request.auth != null && request.resource.data.restaurantId == request.auth.uid;
-      allow update: if request.auth != null && resource.data.restaurantId == request.auth.uid;
-      allow delete: if (request.auth != null && resource.data.restaurantId == request.auth.uid) || isModerator();
+      // All owner mutations go through menuItemMutation Cloud Function so plan limits cannot be bypassed in the browser.
+      allow create, update: if false;
+      allow delete: if isModerator();
     }
 
-    // Order rules
     match /orders/{orderId} {
       allow create: if true;
       allow read: if (request.auth != null && resource.data.restaurantId == request.auth.uid) || isModerator();
-      allow update: if (request.auth != null && resource.data.restaurantId == request.auth.uid &&
-                        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt']))
-                    || isModerator();
+      allow update: if (request.auth != null && resource.data.restaurantId == request.auth.uid && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','updatedAt'])) || isModerator();
       allow delete: if isAdmin();
     }
   }
