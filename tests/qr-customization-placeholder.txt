@@ -1,1 +1,0 @@
-QR customization tests are enforced by tests/qr-customization.test.mjs.
