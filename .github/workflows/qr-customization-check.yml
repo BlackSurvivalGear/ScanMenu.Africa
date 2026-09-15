@@ -1,0 +1,19 @@
+name: QR customization check
+
+on:
+  pull_request:
+    paths:
+      - 'js/qr-manager.js'
+      - 'tests/qr-customization.test.mjs'
+      - '.github/workflows/qr-customization-check.yml'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: node --check js/qr-manager.js
+      - run: node tests/qr-customization.test.mjs
