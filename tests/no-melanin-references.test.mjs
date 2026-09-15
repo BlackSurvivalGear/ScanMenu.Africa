@@ -14,13 +14,14 @@ function walk(dir) {
     if (!textExtensions.has(path.extname(entry.name).toLowerCase())) continue;
     if (full.endsWith(path.join('tests', 'no-melanin-references.test.mjs'))) continue;
     const content = fs.readFileSync(full, 'utf8');
-    if (/melanin\s*[-_.]?\s*maps?/i.test(content)) offenders.push(path.relative(root, full));
+    const legacyBrandPattern = new RegExp(['mel', 'anin', '\\s*[-_.]?\\s*', 'maps?'].join(''), 'i');
+    if (legacyBrandPattern.test(content)) offenders.push(path.relative(root, full));
   }
 }
 
 walk(root);
 if (offenders.length) {
-  console.error(`MelaninMaps references remain in: ${offenders.join(', ')}`);
+  console.error(`Legacy branding references remain in: ${offenders.join(', ')}`);
   process.exit(1);
 }
-console.log('No MelaninMaps references found.');
+console.log('Legacy branding scan passed.');
