@@ -1,1 +1,0 @@
-Download uses the last generated canvas, including the Premium Branded frame when selected, and includes the selected style in the PNG filename.
