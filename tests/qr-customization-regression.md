@@ -1,0 +1,1 @@
+Regression check: Open Menu and Copy Menu Link remain under Menu Builder; Download QR remains under QR controls; profile business-name sizing and logo branding from PR #12 are preserved.
