@@ -1,0 +1,125 @@
+.cuisine-selector {
+    border: 1px solid var(--border-color);
+    border-radius: 0.75rem;
+    padding: 1rem;
+    background: #fff;
+}
+
+.cuisine-selector .cuisine-search {
+    margin-bottom: 0.75rem;
+}
+
+.cuisine-selected {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    padding-bottom: 0.85rem;
+    margin-bottom: 0.85rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.cuisine-selected.hidden,
+.cuisine-empty.hidden {
+    display: none;
+}
+
+.cuisine-selected-pill,
+.cuisine-pill {
+    border: 1px solid var(--border-color);
+    border-radius: 999px;
+    padding: 0.45rem 0.75rem;
+    background: #fff;
+    color: var(--text-color);
+    font: inherit;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.cuisine-pill:hover,
+.cuisine-pill:focus-visible {
+    border-color: var(--primary-color);
+    outline: none;
+}
+
+.cuisine-pill.selected,
+.cuisine-selected-pill {
+    background: var(--primary-light);
+    border-color: var(--primary-color);
+    color: var(--primary-hover);
+}
+
+.cuisine-selected-pill:hover {
+    background: #dcfce7;
+}
+
+.cuisine-section-title {
+    display: block;
+    margin: 0.2rem 0 0.55rem;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+.cuisine-pill-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.cuisine-popular {
+    margin-bottom: 0.85rem;
+}
+
+.cuisine-region {
+    border-top: 1px solid var(--border-color);
+    padding: 0.15rem 0;
+}
+
+.cuisine-region summary {
+    padding: 0.7rem 0.15rem;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--text-color);
+}
+
+.cuisine-region .cuisine-pill-grid {
+    padding: 0 0.15rem 0.8rem;
+}
+
+.cuisine-custom {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.85rem;
+    padding-top: 0.85rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.cuisine-custom input {
+    min-width: 0;
+}
+
+.cuisine-custom .btn {
+    flex: 0 0 auto;
+    padding: 0.625rem 0.9rem;
+}
+
+.cuisine-help,
+.cuisine-empty {
+    margin: 0.6rem 0 0;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+@media (max-width: 520px) {
+    .cuisine-custom {
+        flex-direction: column;
+    }
+
+    .cuisine-custom .btn {
+        width: 100%;
+    }
+}
