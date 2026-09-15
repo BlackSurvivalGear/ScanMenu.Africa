@@ -1,0 +1,1 @@
+Initial QR customization feature: Classic, Brand Gold, Premium Branded, custom colours, logo toggle, contrast guard, styled download.

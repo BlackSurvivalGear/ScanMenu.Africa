@@ -1,0 +1,1 @@
+Classic remains the default QR style.

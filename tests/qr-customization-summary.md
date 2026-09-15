@@ -1,0 +1,1 @@
+QR customization implementation test documentation. See the automated source test and manual matrix in this directory.

@@ -1,0 +1,1 @@
+QR style and colour choices are intentionally session-local in this PR. No Firestore schema or persistence changes are introduced.

@@ -1,0 +1,1 @@
+End of QR customization test notes.
